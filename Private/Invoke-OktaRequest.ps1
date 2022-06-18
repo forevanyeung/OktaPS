@@ -43,10 +43,11 @@ Function Invoke-OktaRequest {
         If($Script:OktaSSOExpirationUTC -lt (Get-Date).ToUniversalTime()) {
             # if expired, check for new expiration
             $session = Invoke-RestMethod -Method "GET" -Uri "https://$OktaDomain/api/v1/sessions/me" -WebSession $Script:OktaSSO -ContentType "application/json" -ErrorAction SilentlyContinue
-            Write-Host "cached expiration expired, trying to renew session"
+            Write-Verbose "cached expiration expired, trying to renew session"
             
             If($session.status -eq "ACTIVE") {
                 $Script:OktaSSOExpirationUTC = $session.expiresAt
+                Write-Verbose "session renewed"
                 Break
             } else {
                 Write-Host "Okta session expired ($Script:OktaSSOExpirationUTC)"
@@ -79,7 +80,9 @@ Function Invoke-OktaRequest {
     }
 
     # Request
-    $response = Invoke-WebRequest -Method $Method -Uri "https://$OktaDomain/$Endpoint" -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
+    $request_uri = "https://$OktaDomain/$Endpoint"
+    $Script:OktaDebugLastRequestUri = $request_uri
+    $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
     
     # supports pagination
     $return = [System.Collections.ArrayList]@()
