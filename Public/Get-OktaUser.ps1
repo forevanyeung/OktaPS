@@ -5,17 +5,23 @@ Function Get-OktaUser {
         [String]
         $Identity,
 
-        [Parameter(ParameterSetName = 'ListUser', Mandatory, HelpMessage="Okta API filter criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter")]
+        [Parameter(ParameterSetName = 'ListUserFilter', Mandatory, HelpMessage="Okta API filter criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter")]
         [String]
         $Filter,
 
+        [Parameter(ParameterSetName = 'ListUserSearch', Mandatory, HelpMessage="Okta API search criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-search")]
+        [String]
+        $Search,
+
         [Parameter(ParameterSetName = 'GetUser')]
-        [Parameter(ParameterSetName = 'ListUser')]
+        [Parameter(ParameterSetName = 'ListUserFilter')]
+        [Parameter(ParameterSetName = 'ListUserSearch')]
         [String]
         $Properties,
 
         [Parameter(ParameterSetName = 'GetUser')]
-        [Parameter(ParameterSetName = 'ListUser')]
+        [Parameter(ParameterSetName = 'ListUserFilter')]
+        [Parameter(ParameterSetName = 'ListUserSearch')]
         [Int]
         $Limit = 10
     )
@@ -43,22 +49,25 @@ Function Get-OktaUser {
             }
         }
 
-        "ListUser" {
+        "ListUserFilter" {
             $url_builder = @{}
             $url_builder['limit'] = $Limit
             $url_builder['filter'] = $Filter
             $querystring = New-HttpQueryString -QueryParameter $url_builder
     
             $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
-            foreach($u in $user_query) {
-                $groups_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$Identity/groups"
-                If($groups_query) {
-                    $u | Add-Member -MemberType NoteProperty -Name "_groups" -Value $groups_query
-                }
-            }
+        }
+
+        "ListUserSearch" {
+            $url_builder = @{}
+            $url_builder['limit'] = $Limit
+            $url_builder['search'] = $Search
+            $querystring = New-HttpQueryString -QueryParameter $url_builder
+    
+            $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
         }
     }
-
+    
     $OktaUser = ConvertTo-OktaUser -InputObject $user_query
     Return $OktaUser
 
