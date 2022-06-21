@@ -67,7 +67,7 @@ Function Get-OktaUser {
             $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
         }
     }
-    
+
     $OktaUser = ConvertTo-OktaUser -InputObject $user_query
     Return $OktaUser
 
