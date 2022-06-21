@@ -2,8 +2,10 @@ Function Test-CredentialAuth {
     [CmdletBinding()]
     param ()
 
-    If($Script:OktaSSOExpirationUTC) {
-        Write-Verbose "Time left until expires: $(($Script:OktaSSOExpirationUTC - (get-date).ToUniversalTime()).tostring())"
+    $NowUTC = (Get-Date).ToUniversalTime()
+
+    If($Script:OktaSSOExpirationUTC -gt $NowUTC) {
+        Write-Verbose "Time left until expires: $(($Script:OktaSSOExpirationUTC - $NowUTC).tostring())"
 
         Return $True
     } else {
