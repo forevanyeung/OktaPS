@@ -102,7 +102,7 @@ Function Connect-Okta {
 
         "PrivateKey" {
             Write-Verbose "Using OAuth 2.0 private key auth method"
-            Connect-OktaOAuth -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -PrivateKey $PrivateKey
+            Connect-OktaPrivateKey -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -PrivateKey $PrivateKey
         }
 
         "Credential" {

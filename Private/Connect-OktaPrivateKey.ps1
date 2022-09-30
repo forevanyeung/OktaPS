@@ -1,4 +1,4 @@
-Function Connect-OktaOAuth {
+Function Connect-OktaPrivateKey {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -12,7 +12,7 @@ Function Connect-OktaOAuth {
 
         # Parameter help description
         [Parameter(Mandatory)]
-        [String]
+        [String[]]
         $Scopes,
 
         # Parameter help description
