@@ -1,0 +1,5 @@
+.DS_Store
+
+# okta configurations
+.okta/
+okta.yaml
