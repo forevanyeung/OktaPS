@@ -1,5 +1,5 @@
 Function Get-OktaUser {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName='AllUsers')]
     param (
         [Parameter(ParameterSetName = 'GetUser', Mandatory, Position=0, HelpMessage="Okta user ID, login, or short-login")]
         [String]
@@ -23,7 +23,12 @@ Function Get-OktaUser {
         [Parameter(ParameterSetName = 'ListUserFilter')]
         [Parameter(ParameterSetName = 'ListUserSearch')]
         [Int]
-        $Limit = 10
+        $Limit = 10,
+
+        # By default all users return a list of all users that do not have a status of DEPROVISIONED, this switch also returns DEPROVISIONED users
+        [Parameter(ParameterSetName = 'AllUsers')]
+        [Switch]
+        $IncludeDeprovisioned
     )
 
     $request_args = @{}
@@ -61,10 +66,25 @@ Function Get-OktaUser {
         "ListUserSearch" {
             $url_builder = @{}
             $url_builder['limit'] = $Limit
-            $url_builder['search'] = $Search
+            $url_builder['search'] = $Search.Replace("'","`"") #okta query has to be in double-quotes
             $querystring = New-HttpQueryString -QueryParameter $url_builder
     
             $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
+        }
+
+        "AllUsers" {
+            $url_builder = @{}
+            $url_builder['limit'] = 200
+            $querystring = New-HttpQueryString -QueryParameter $url_builder
+            
+            $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
+
+            If($IncludeDeprovisioned) {
+                $url_builder['filter'] = 'status eq "DEPROVISIONED"'
+                $querystring = New-HttpQueryString -QueryParameter $url_builder
+
+                $user_query += Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
+            }
         }
     }
 
