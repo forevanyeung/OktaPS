@@ -30,16 +30,7 @@ Function Invoke-OktaRequest {
     $built_headers = @{}
 
     # Check cache for valid session cookies and expiration
-    If($Script:OktaAPI) {
-
-        $built_headers = @{
-            Accept = "application/json"
-            "Content-Type" = "application/json"
-            Authorization = "SSWS $OKTA_API"
-        }
-
-    } elseif ($Script:OktaSSO) {
-
+    If($Script:OktaSSO) {
         If($Script:OktaSSOExpirationUTC -lt (Get-Date).ToUniversalTime()) {
             # if expired, check for new expiration
             try {
@@ -55,7 +46,7 @@ Function Invoke-OktaRequest {
             } else {
                 Write-Host "Okta session expired ($Script:OktaSSOExpirationUTC)"
                 Remove-Variable OktaSSO,OktaSSOExpirationUTC -Scope Script
-                Connect-Okta -OktaOrg $Script:OktaOrg
+                Connect-Okta -OrgUrl $Script:OktaOrg
             }
         }
 
@@ -64,7 +55,6 @@ Function Invoke-OktaRequest {
         }
 
         $webrequest_parameters['WebSession'] = $Script:OktaSSO
-
     } else {
         Connect-Okta
         $OktaDomain = $Script:OktaAdminDomain
