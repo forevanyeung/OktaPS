@@ -44,22 +44,18 @@ Function Invoke-OktaRequest {
         $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
     }
 
-        $webrequest_parameters['WebSession'] = $Script:OktaSSO
-    } else {
-        Connect-Okta
-        $OktaDomain = $Script:OktaAdminDomain
+    # Body
+    If($Body) {
+        $built_headers['Accept'] = "application/json"
+        $built_headers['Content-Type'] = "application/json"
 
-        $webrequest_parameters['WebSession'] = $Script:OktaSSO
+        $webrequest_parameters['Body'] = $Body | ConvertTo-Json
     }
 
     # Build request headers
     Foreach($k in $Headers.Keys) {
         $built_headers[$k] = $Headers[$k]
-    }
-
-    # Body
-    If($Body) {
-        $webrequest_parameters['Body'] = $Body
+        Write-Debug "Adding header to request ${k}: $Headers[$k]"
     }
 
     # Request
