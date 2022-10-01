@@ -93,6 +93,8 @@ Function Connect-Okta {
     If(-not $OrgUrl.StartsWith("https://")) {
         Throw "OrgUrl must start with https://"
     }
+
+    Clear-OktaAuthentication
     
     Switch($AuthFlow) {
         "SSWS" {

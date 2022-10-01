@@ -17,7 +17,7 @@ Function Set-OktaAuthentication {
         $Domain,
 
         # Parameter help description
-        [Parameter(ParameterSetName="OAuth", Mandatory)]
+        [Parameter(ParameterSetName="PrivateKey", Mandatory)]
         [Int32]
         $ExpiresIn,
 
@@ -54,7 +54,7 @@ Function Set-OktaAuthentication {
         Write-Verbose "Setting OktaUsername to $Script:OktaUsername"
     }
 
-    If($PSCmdlet.ParameterSetName -eq "OAuth") {
+    If($PSCmdlet.ParameterSetName -eq "PrivateKey") {
         $now = (Get-Date).AddSeconds($ExpiresIn).ToUniversalTime()
         $Script:OktaSSOExpirationUTC = $now
         Write-Verbose "Setting OktaSSOExpirationUTC to $Script:OktaSSOExpirationUTC"

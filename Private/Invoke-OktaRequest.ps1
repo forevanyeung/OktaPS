@@ -3,9 +3,9 @@ Function Invoke-OktaRequest {
     param (
         [Parameter()]
         [String]
-        $Method,
+        $Method = "GET",
 
-        [Parameter()]
+        [Parameter(Mandatory)]
         [String]
         $Endpoint,
 
@@ -31,28 +31,18 @@ Function Invoke-OktaRequest {
 
     # Check cache for valid session cookies and expiration
     If($Script:OktaSSO) {
-        If($Script:OktaSSOExpirationUTC -lt (Get-Date).ToUniversalTime()) {
-            # if expired, check for new expiration
-            try {
-                $session = Invoke-RestMethod -Method "GET" -Uri "$OktaDomain/api/v1/sessions/me/lifecycle/refresh" -WebSession $Script:OktaSSO -ContentType "application/json" -ErrorAction SilentlyContinue
-            } catch {
-                Write-Verbose "cached expiration expired, trying to renew session"
-            }
-            
-            If($session.status -eq "ACTIVE") {
-                $Script:OktaSSOExpirationUTC = $session.expiresAt
-                Write-Verbose "session renewed"
-                Break
-            } else {
-                Write-Host "Okta session expired ($Script:OktaSSOExpirationUTC)"
-                Remove-Variable OktaSSO,OktaSSOExpirationUTC -Scope Script
-                Connect-Okta -OrgUrl $Script:OktaOrg
-            }
+        If(-not (Test-OktaAuthentication)) {
+            Update-OktaAuthentication
         }
+    } else {
+        Connect-Okta
+    }
 
-        If($Script:OktaXSRF) {
-            $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
-        }
+    $webrequest_parameters['WebSession'] = $Script:OktaSSO
+
+    If($Script:OktaXSRF) {
+        $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
+    }
 
         $webrequest_parameters['WebSession'] = $Script:OktaSSO
     } else {
@@ -74,31 +64,20 @@ Function Invoke-OktaRequest {
 
     # Request
     $request_uri = "$OktaDomain/$Endpoint"
-    $Script:OktaDebugLastRequestUri = $request_uri
-    $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
-    
+
     # supports pagination
-    $return = [System.Collections.ArrayList]@()
-    $run_once = $True
-    while($run_once -or ($response.RelationLink.ContainsKey('next'))) {
-        $run_once = $False
+    $next = $True
+    $return = while($next) {
+        $Script:OktaDebugLastRequestUri = $request_uri
+        $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
 
         # Response
         If($PassThru) {
-            $return += $response
-
-            # supports pagination
-            If($response.RelationLink.ContainsKey('next')) {
-                $response = Invoke-WebRequest -Method $Method -Uri $response.RelationLink['next'] -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
-            }
+            $response
 
         } elseif(($response.StatusCode -ge 200) -and ($response.StatusCode -le 299)) {
-            $return += ($response.Content | ConvertFrom-Json)
+            $response.Content | ConvertFrom-Json
             
-            # supports pagination
-            If($response.RelationLink.ContainsKey('next')) {
-                $response = Invoke-WebRequest -Method $Method -Uri $response.RelationLink['next'] -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
-            }
         
         } elseif ($response.StatusCode -eq 429) {
             $limit_reset = (([System.DateTimeOffset]::FromUnixTimeSeconds($response.Headers['x-rate-limit-reset'])).DateTime).ToString()
@@ -106,7 +85,15 @@ Function Invoke-OktaRequest {
             # wait until time elapses and continue
         
         } else {
+            # uncaught status code, return the raw and exit
             Return $response
+        }
+
+        # pagination
+        If($response.RelationLink.ContainsKey('next')) {
+            $request_uri = $response.RelationLink['next']
+        } else {
+            $next = $False
         }
     }
 
