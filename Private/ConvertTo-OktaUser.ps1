@@ -12,6 +12,7 @@ Function ConvertTo-OktaUser {
             PSTypeName      = 'Okta.User'
             id              = $OktaUser.id
             status          = $OktaUser.status
+            enabled         = ($OktaUser.status -in @("STAGED", "PROVISIONED", "ACTIVE", "RECOVERY", "PASSWORD EXPIRED", "LOCKED OUT", "SUSPENDED")) ? $True : $False
             created         = $OktaUser.created
             activated       = $OktaUser.activated
             statusChanged   = $OktaUser.statusChanged
