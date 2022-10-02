@@ -50,7 +50,7 @@ Function Connect-Okta {
             If(Test-Path ($oktaYAMLPath = Join-Path ".okta" "okta.yaml")) {
                 Write-Verbose "Connecting to Okta using okta.yaml file in current working directory"
                 $useYAML = $true
-            } ElseIf(Test-Path ($oktaYAMLPath = Join-Path $env:HOME ".okta" "okta.yaml")) {
+            } ElseIf(Test-Path ($oktaYAMLPath = Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta" "okta.yaml")) {
                 Write-Verbose "Connecting to Okta using okta.yaml file in user's home directory"
                 $useYAML = $true
             }
@@ -80,7 +80,7 @@ Function Connect-Okta {
                     Write-Error "Unknown authorization mode"
                 }
             } Else {
-                $OrgUrl = Read-Host -Prompt "Enter your Okta organization url"
+                $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
                 $AuthFlow = "Credential"
             }
         }

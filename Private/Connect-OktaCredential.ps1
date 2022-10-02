@@ -27,6 +27,7 @@ Function Connect-OktaCredential {
 
         MFA_REQUIRED {
             # Duo
+            Write-Host "MFA is required"
 
             $okta_verify = Invoke-RestMethod -Uri $okta_authn._embedded.factors[0]._links.verify.href -Method "POST" -Body (@{
                 "stateToken" = $okta_authn.stateToken
