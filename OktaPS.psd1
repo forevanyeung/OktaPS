@@ -12,7 +12,7 @@
 RootModule = 'OktaPS'
 
 # Version number of this module.
-ModuleVersion = '0.0.1'
+ModuleVersion = '0.1.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -30,7 +30,7 @@ CompanyName = 'CLEAR'
 Copyright = '(c) Evan Yeung. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell wrapper for Okta Admin API'
+Description = 'A PowerShell module for Okta administration. Supports credential, private key, and API authentication and pipelining objects.'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -51,7 +51,7 @@ Description = 'PowerShell wrapper for Okta Admin API'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @('PowerHTML')
+RequiredModules = @('PowerHTML', 'PSJsonWebToken')
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
