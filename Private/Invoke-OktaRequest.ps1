@@ -1,5 +1,5 @@
 Function Invoke-OktaRequest {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter()]
         [String]
@@ -12,6 +12,10 @@ Function Invoke-OktaRequest {
         [Parameter()]
         [Hashtable]
         $Headers,
+
+        [Parameter()]
+        [Hashtable]
+        $Query,
 
         [Parameter()]
         [Hashtable]
@@ -44,6 +48,17 @@ Function Invoke-OktaRequest {
         $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
     }
 
+    # Query parameters
+    If($Query) {
+        $url_builder = @{}
+        Foreach($k in $Query.Keys) {
+            $url_builder[$k] = $Query[$k]
+        }
+        $querystring = New-HttpQueryString -QueryParameter $url_builder
+
+        $Endpoint = $Endpoint + "?" + $querystring
+    }
+
     # Body
     If($Body) {
         $built_headers['Accept'] = "application/json"
@@ -61,37 +76,39 @@ Function Invoke-OktaRequest {
     # Request
     $request_uri = "$OktaDomain/$Endpoint"
 
-    # supports pagination
-    $next = $True
-    $return = while($next) {
-        $Script:OktaDebugLastRequestUri = $request_uri
-        $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
+    if ($PSCmdlet.ShouldProcess($request_uri)) {
+        # supports pagination
+        $next = $True
+        $return = while($next) {
+            $Script:OktaDebugLastRequestUri = $request_uri
+            $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
 
-        # Response
-        If($PassThru) {
-            $response
+            # Response
+            If($PassThru) {
+                $response
 
-        } elseif(($response.StatusCode -ge 200) -and ($response.StatusCode -le 299)) {
-            $response.Content | ConvertFrom-Json
+            } elseif(($response.StatusCode -ge 200) -and ($response.StatusCode -le 299)) {
+                $response.Content | ConvertFrom-Json
+                
             
-        
-        } elseif ($response.StatusCode -eq 429) {
-            $limit_reset = (([System.DateTimeOffset]::FromUnixTimeSeconds($response.Headers['x-rate-limit-reset'])).DateTime).ToString()
-            Write-Host "Okta Rate Limit Exceeded. $limit_reset"
-            # wait until time elapses and continue
-        
-        } else {
-            # uncaught status code, return the raw and exit
-            Return $response
-        }
+            } elseif ($response.StatusCode -eq 429) {
+                $limit_reset = (([System.DateTimeOffset]::FromUnixTimeSeconds($response.Headers['x-rate-limit-reset'])).DateTime).ToString()
+                Write-Host "Okta Rate Limit Exceeded. $limit_reset"
+                # wait until time elapses and continue
+            
+            } else {
+                # uncaught status code, return the raw and exit
+                Return $response
+            }
 
-        # pagination
-        If($response.RelationLink.ContainsKey('next')) {
-            $request_uri = $response.RelationLink['next']
-        } else {
-            $next = $False
+            # pagination
+            If($response.RelationLink.ContainsKey('next')) {
+                $request_uri = $response.RelationLink['next']
+            } else {
+                $next = $False
+            }
         }
     }
-
+    
     Return $return 
 }
