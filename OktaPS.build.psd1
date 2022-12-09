@@ -6,8 +6,8 @@
         PSJsonWebToken = "forevanyeung/PSJsonWebToken/PSJsonWebToken#feat-privatekey"
     }
     DevDependencies = @{
-        Pester = ""
-        PsScriptAnalyzer = ""
-        platyPS = ""
+        # Pester = ""
+        # PsScriptAnalyzer = ""
+        # platyPS = ""
     }
 }
