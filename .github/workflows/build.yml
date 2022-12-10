@@ -3,17 +3,14 @@ on:
   workflow_dispatch
 
 jobs:
-  build-oktaps:
-    name: Build OktaPS Module
-    runs-on: 
-      - self-hosted
-      - commercial
-      - builder
+  build:
+    name: Build module
+    runs-on: [self-hosted, windows]
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Install InvokeBuild PowerShell module
+      - name: Install InvokeBuild module
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
