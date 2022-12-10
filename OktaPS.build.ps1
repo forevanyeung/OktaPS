@@ -31,14 +31,14 @@ Enter-Build {
 # Synopsis: Remove
 task CleanOutput {
 	$null = Remove-Item $outputFolder -Force -Recurse -ErrorAction SilentlyContinue
-    Write-Host -NoNewLine "      Cleaning up directory: $outputFolder" 
+    Write-Host -NoNewLine "     Cleaning up directory: $outputFolder" 
     $null = New-Item $outputFolder -ItemType Directory
     Write-Host -ForegroundColor Green ' ...Complete!'
 }
 
 task CleanPwshModule {
     $null = Remove-Item $pwshModuleFolder -Force -Recurse -ErrorAction SilentlyContinue
-    Write-Host -NoNewLine "      Cleaning up directory: $pwshModuleFolder" 
+    Write-Host -NoNewLine "     Cleaning up directory: $pwshModuleFolder" 
     $null = New-Item $pwshModuleFolder -ItemType Directory
     Write-Host -ForegroundColor Green ' ...Complete!'
 }
@@ -49,7 +49,7 @@ task BumpBuildNumber {
     $manifest = Test-ModuleManifest -Path $sourceManifestPath
     [System.Version]$version = $manifest.Version
     [String]$newVersion = New-Object -TypeName System.Version -ArgumentList ($version.Major, $version.Minor, ($version.Build + 1))
-    Write-Output -InputObject ('New Module version: {0}' -f $newVersion)
+    Write-Host "     New Module version: $newVersion"
 
     # Update manifest with new version
     Update-ModuleManifest -ModuleVersion $newVersion -Path $sourceManifestPath
@@ -58,44 +58,44 @@ task BumpBuildNumber {
 # Synopsis: 
 task CopyModuleManifest {
     Write-Host -NoNewLine "     Validating source manifest"
-    Test-ModuleManifest -Path $sourceManifestPath
+    $null = Test-ModuleManifest -Path $sourceManifestPath
     Write-Host -ForegroundColor Green "...Complete!"
 
     Write-Host "     Copying module manifest to output" -NoNewLine
-    Copy-Item -Path $sourceManifestPath -Destination $outputFolder -PassThru
+    Copy-Item -Path $sourceManifestPath -Destination $outputFolder
     Write-Host -ForegroundColor Green "...Complete!"
 }
 
 # Synopsis: Assemble the module for release
 task AssembleModule {
     $private = Join-Path $sourceFolder "Private"
-    Write-Host "      Private Source Files: $private"
+    Write-Host "     Private Source Files: $private"
     $CombineFiles += "## PRIVATE MODULE FUNCTIONS AND DATA ## `r`n`r`n"
     Get-ChildItem $private | ForEach-Object {
-        Write-Host "             $($_.Name)"
+        Write-Host "          $($_.Name)"
         $CombineFiles += (Get-content $_ -Raw) + "`r`n`r`n"
     }
-    Write-Host -NoNewLine "      Combining private source files"
+    Write-Host -NoNewLine "     Combining private source files"
     Write-Host -ForegroundColor Green '...Complete!'
 
     $public = Join-Path $sourceFolder "Public"
     $CombineFiles += "## PUBLIC MODULE FUNCTIONS AND DATA ##`r`n`r`n"
-    Write-Host  "      Public Source Files: $public"
+    Write-Host  "     Public Source Files: $public"
     $publicFunctions = Get-ChildItem -Path $public
     $publicFunctions | ForEach-Object {
-        Write-Host "             $($_.Name)"
+        Write-Host "          $($_.Name)"
         $CombineFiles += (Get-content $_ -Raw) + "`r`n`r`n"
     }
-    Write-Host -NoNewline "      Combining public source files"
+    Write-Host -NoNewline "     Combining public source files"
     Write-Host -ForegroundColor Green '...Complete!'
 
     $psm1 = Join-Path $outputFolder ($config.Module + ".psm1")
     Set-Content -Path $psm1 -Value $CombineFiles -Encoding UTF8
-    Write-Host -NoNewLine '      Combining module functions and data into one PSM1 file'
+    Write-Host -NoNewLine '     Combining module functions and data into one PSM1 file'
     Write-Host -ForegroundColor Green '...Complete!'
 
     # NB: module manifest needs the module to exists or Update-ModuleManifest will fail
-    Write-Host -NoNewLine "Exporting public functions to module manifest"
+    Write-Host -NoNewLine "     Exporting public functions to module manifest"
     Update-ModuleManifest -Path $outputManifestPath -FunctionsToExport $publicFunctions.BaseName
     Write-Host -ForegroundColor Green "...Complete!"
 }
