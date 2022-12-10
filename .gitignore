@@ -3,3 +3,7 @@
 # okta configurations
 .okta/
 okta.yaml
+
+# build
+release/
+pwsh_modules/
