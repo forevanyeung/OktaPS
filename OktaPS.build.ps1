@@ -103,20 +103,29 @@ task AssembleModule {
 task AssembleTypes {
     $typesDoc = [System.Xml.XmlDocument]::new()
     $xmlDeclaration = $typesDoc.CreateXmlDeclaration("1.0", "utf-8", $null)
-    $typesDoc.InsertBefore($xmlDeclaration, $typesDoc.DocumentElement)
+    [void] $typesDoc.InsertBefore($xmlDeclaration, $typesDoc.DocumentElement)
 
     $xmlRoot = $typesDoc.CreateElement("Types")
-    $typesDoc.AppendChild($xmlRoot)
+    [void] $typesDoc.AppendChild($xmlRoot)
 
     $types = Join-Path $sourceFolder "Types"
+    Write-Host "     Assembling type XML data"
     Get-ChildItem $types -Filter "*.ps1xml" | ForEach-Object {
         $type = [System.Xml.XmlDocument](Get-Content $_)
-        $import = $typesDoc.ImportNode($type.Types.Type, $true)
-        $typesDoc.DocumentElement.AppendChild($import);
+        $type.Types.Type | ForEach-Object {
+            Write-Host "          $($_.Name)"
+            $import = $typesDoc.ImportNode($_, $true)
+            [void] $typesDoc.DocumentElement.AppendChild($import);
+        }
     }
+    Write-Host -ForegroundColor Green "     ...Complete!"
 
     $typesPath = Join-Path $outputFolder ($config.Module + ".Types.ps1xml")
     $typesDoc.Save($typesPath)
+
+    Write-Host -NoNewLine "     Writing TypesToProcess to module manifest"
+    Update-ModuleManifest -Path $outputManifestPath -TypesToProcess ($config.Module + ".Types.ps1xml")
+    Write-Host -ForegroundColor Green "...Complete!"
 }
 
 task DownloadDependencies {
@@ -157,7 +166,7 @@ task DownloadDependencies {
     }
 }
 
-task . CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, DownloadDependencies
+task . CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies
 task Install {
     $Script:environment = "Install"
     $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules"            # /OktaPS/pwsh_modules/

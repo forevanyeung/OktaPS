@@ -20,24 +20,4 @@
             </MemberSet>
         </Members>
     </Type>
-    <Type>
-        <Name>Okta.UserTest</Name>
-        <Members>
-            <MemberSet>
-                <Name>PSStandardMembers</Name>
-                <Members>
-                    <PropertySet>
-                        <Name>DefaultDisplayPropertySet</Name>
-                        <ReferencedProperties>
-                            <Name>id</Name>
-                            <Name>status</Name>
-                            <Name>firstName</Name>
-                            <Name>lastName</Name>
-                            <Name>login</Name>
-                        </ReferencedProperties>
-                    </PropertySet>
-                </Members>
-            </MemberSet>
-        </Members>
-    </Type>
 </Types>
