@@ -1,5 +1,11 @@
 #Requires -Modules 'InvokeBuild'
 
+param (
+    [Parameter(Mandatory=$false)]
+    [String]
+    $NugetApiKey
+)
+
 $BuildRoot = $BuildRoot ?? (Get-Location).Path                                  # /
 Enter-Build {
     # Environment
@@ -166,8 +172,18 @@ task DownloadDependencies {
     }
 }
 
+task PublishInternalNexus {
+    If(-not $NugetApiKey) {
+        $NugetApiKey = (property NugetApiKey)
+        throw "missing nugetapikey"
+    }
+
+    Publish-Module -Name $outputManifestPath -Repository "nuget-hosted" -NugetApiKey $nugetapikey
+}
+
 task . CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies
 task Install {
     $Script:environment = "Install"
     $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules"            # /OktaPS/pwsh_modules/
 }, CleanPwshModule, DownloadDependencies
+task Publish CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies ,PublishInternalNexus
