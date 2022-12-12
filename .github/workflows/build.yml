@@ -5,7 +5,9 @@ on:
 jobs:
   build:
     name: Build module
-    runs-on: [self-hosted, windows]
+    runs-on: [self-hosted, linux]
+    container:
+      image: docker pull mcr.microsoft.com/powershell:latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
