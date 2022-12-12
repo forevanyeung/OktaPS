@@ -70,6 +70,9 @@ task CopyModuleManifest {
     Write-Host "     Copying module manifest to output" -NoNewLine
     Copy-Item -Path $sourceManifestPath -Destination $outputFolder
     Write-Host -ForegroundColor Green "...Complete!"
+
+    # Don't do anything to module manifest yet, see UpdateModuleManifest task.
+    # Module files need to exists first.
 }
 
 # Synopsis: Assemble the module for release
@@ -172,6 +175,13 @@ task DownloadDependencies {
     }
 }
 
+# .SYNOPSIS Final updates to module manifest
+task UpdateModuleManifest {
+    Write-Host -NoNewLine "     Removing Prerelease tag from module manifest"
+    Update-ModuleManifest $outputManifestPath -Prerelease " "
+    Write-Host -ForegroundColor Green "...Complete!"
+}
+
 task PublishInternalNexus {
     If(-not $NugetApiKey) {
         $NugetApiKey = (property NugetApiKey)
@@ -181,9 +191,9 @@ task PublishInternalNexus {
     Publish-Module -Name $outputManifestPath -Repository "nuget-hosted" -NugetApiKey $nugetapikey
 }
 
-task . CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies
+task . CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies, UpdateModuleManifest
 task Install {
     $Script:environment = "Install"
     $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules"            # /OktaPS/pwsh_modules/
 }, CleanPwshModule, DownloadDependencies
-task Publish CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies ,PublishInternalNexus
+task Publish CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies, UpdateModuleManifest, PublishInternalNexus
