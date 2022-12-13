@@ -2,11 +2,11 @@
 
 [CmdletBinding(DefaultParameterSetName="Build")]
 param (
-    [Parameter(ParameterSetName="Publish", Mandatory=$true)]
+    [Parameter(ParameterSetName="Publish")]
     [String]
     $NugetServer, 
     
-    [Parameter(ParameterSetName="Publish", Mandatory=$true)]
+    [Parameter(ParameterSetName="Publish")]
     [String]
     $NugetApiKey
 )
