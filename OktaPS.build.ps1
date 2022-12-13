@@ -198,7 +198,7 @@ task PublishInternalNexus {
     }
 
     Write-Host -NoNewline "     Looking for PSRepository"
-    $repository = Get-PSRepository | Where-Object { $_.SourceLocation -eq $NugetServer } | Select-Object -First 1 -ExpandProperty "Name"
+    $repository = Get-PSRepository | Where-Object { $_.PublishLocation -eq $NugetServer } | Select-Object -First 1 -ExpandProperty "Name"
     If(-not $repository) {
         Write-Host -NoNewline "...Registering PSRepository"
         $repository = "Nexus-OktaPS"
