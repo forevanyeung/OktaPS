@@ -1,7 +1,12 @@
 #Requires -Modules 'InvokeBuild'
 
+[CmdletBinding(DefaultParameterSetName="Build")]
 param (
-    [Parameter(Mandatory=$false)]
+    [Parameter(ParameterSetName="Publish", Mandatory=$true)]
+    [String]
+    $NugetServer, 
+    
+    [Parameter(ParameterSetName="Publish", Mandatory=$true)]
     [String]
     $NugetApiKey
 )
@@ -188,12 +193,37 @@ task PublishInternalNexus {
         throw "missing nugetapikey"
     }
 
-    Publish-Module -Name $outputManifestPath -Repository "nuget-hosted" -NugetApiKey $nugetapikey
+    If(-not (Test-Path $outputManifestPath)) {
+        throw "missing build files, run Invoke-Build first"
+    }
+
+    Write-Host -NoNewline "     Looking for PSRepository"
+    $repository = Get-PSRepository | Where-Object { $_.SourceLocation -eq $NugetServer } | Select-Object -First 1 -ExpandProperty "Name"
+    If(-not $repository) {
+        Write-Host -NoNewline "...Registering PSRepository"
+        $repository = "Nexus-OktaPS"
+        Register-PSRepository -Name $repository -SourceLocation $NugetServer -PublishLocation $NugetServer
+    }
+    Write-Host -ForegroundColor Green "...Complete!"
+
+    Write-Host -NoNewLine "     Publishing module to repository"
+    Publish-Module -Name $outputManifestPath -Repository $repository -NugetApiKey $NugetApiKey
+    Write-Host -ForegroundColor Green "...Complete!"
 }
 
-task . CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies, UpdateModuleManifest
+task . CleanOutput, 
+       BumpBuildNumber, 
+       CopyModuleManifest, 
+       AssembleModule, 
+       AssembleTypes, 
+       DownloadDependencies, 
+       UpdateModuleManifest
+
 task Install {
-    $Script:environment = "Install"
-    $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules"            # /OktaPS/pwsh_modules/
-}, CleanPwshModule, DownloadDependencies
-task Publish CleanOutput, BumpBuildNumber, CopyModuleManifest, AssembleModule, AssembleTypes, DownloadDependencies, UpdateModuleManifest, PublishInternalNexus
+        $Script:environment = "Install"
+        $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules"            # /OktaPS/pwsh_modules/
+     }, 
+     CleanPwshModule, 
+     DownloadDependencies
+
+task Publish PublishInternalNexus

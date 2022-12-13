@@ -30,3 +30,7 @@ jobs:
         with:
           name: release
           path: release
+
+      - name: Publish to Nexus
+        shell: pwsh
+        run: Invoke-Build Publish -NugetServer ${{ secrets.NEXUS_URL }} -NugetApiKey ${{ secrets.NEXUS_APIKEY }}
