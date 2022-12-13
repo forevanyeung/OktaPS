@@ -33,7 +33,10 @@ jobs:
 
       - name: Install latest Dotnet CLI
         shell: bash
-        run: <(curl -sL https://dot.net/v1/dotnet-install.sh)
+        run: |
+          sudo apt update
+          sudo apt install curl
+          bash <(curl -sL https://dot.net/v1/dotnet-install.sh)
 
       - name: Publish to Nexus
         shell: pwsh
