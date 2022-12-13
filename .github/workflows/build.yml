@@ -31,6 +31,10 @@ jobs:
           name: release
           path: release
 
+      - name: Install latest Dotnet CLI
+        shell: bash
+        run: <(curl -sL https://dot.net/v1/dotnet-install.sh)
+
       - name: Publish to Nexus
         shell: pwsh
         run: Invoke-Build Publish -NugetServer ${{ secrets.NEXUS_URL }} -NugetApiKey ${{ secrets.NEXUS_APIKEY }}
