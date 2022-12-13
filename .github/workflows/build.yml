@@ -5,7 +5,10 @@ on:
 jobs:
   build:
     name: Build module
-    runs-on: [ubuntu-latest]
+    runs-on:
+      - self-hosted
+      - commercial
+      - builder
     container:
       image: mcr.microsoft.com/powershell:latest
     steps:
