@@ -12,7 +12,7 @@
 RootModule = 'OktaPS'
 
 # Version number of this module.
-ModuleVersion = '0.1.35'
+ModuleVersion = '0.1.36'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -33,7 +33,7 @@ Copyright = '(c) Evan Yeung. All rights reserved.'
 Description = 'A PowerShell module for Okta administration. Supports credential, private key, and API authentication and pipelining objects.'
 
 # Minimum version of the PowerShell engine required by this module
-# PowerShellVersion = ''
+PowerShellVersion = '7.2.7'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''

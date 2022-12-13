@@ -2,7 +2,7 @@ Function Get-OktaUser {
     [CmdletBinding(DefaultParameterSetName='AllUsers')]
     param (
         [Parameter(ParameterSetName = 'GetUser', Mandatory, Position=0, HelpMessage="Okta user ID, login, or short-login")]
-        [String]
+        [String[]]
         $Identity,
 
         [Parameter(ParameterSetName = 'ListUserFilter', Mandatory, HelpMessage="Okta API filter criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter")]
@@ -46,11 +46,15 @@ Function Get-OktaUser {
 
     switch ($PsCmdlet.ParameterSetName) {
         "GetUser" { 
-            $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$Identity" @request_args -ErrorAction Stop
+            $user_query = Foreach($i in $Identity) {
+                $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
 
-            $groups_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$Identity/groups" -ErrorAction SilentlyContinue
-            If($groups_query) {
-                $user_query | Add-Member -MemberType NoteProperty -Name "_groups" -Value $groups_query
+                $groups_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i/groups" -ErrorAction SilentlyContinue
+                If($groups_query) {
+                    $query | Add-Member -MemberType NoteProperty -Name "_groups" -Value $groups_query
+                }
+
+                $query
             }
         }
 
