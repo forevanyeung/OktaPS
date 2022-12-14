@@ -12,7 +12,7 @@
 RootModule = 'OktaPS'
 
 # Version number of this module.
-ModuleVersion = '0.1.41'
+ModuleVersion = '0.1.42'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
