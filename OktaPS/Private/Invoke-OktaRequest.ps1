@@ -27,7 +27,11 @@ Function Invoke-OktaRequest {
 
         [Parameter()]
         [Switch]
-        $PassThru
+        $PassThru,
+
+        [Parameter()]
+        [Switch]
+        $NoPagination
     )
 
     $webrequest_parameters = @{}
@@ -64,7 +68,7 @@ Function Invoke-OktaRequest {
         $built_headers['Accept'] = "application/json"
         $built_headers['Content-Type'] = "application/json"
 
-        $webrequest_parameters['Body'] = $Body | ConvertTo-Json
+        $webrequest_parameters['Body'] = $Body | ConvertTo-Json -Depth 99
     }
 
     # Build request headers
@@ -102,7 +106,7 @@ Function Invoke-OktaRequest {
             }
 
             # pagination
-            If($response.RelationLink.ContainsKey('next')) {
+            If($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
                 $request_uri = $response.RelationLink['next']
             } else {
                 $next = $False
