@@ -5,9 +5,12 @@ on:
 jobs:
   build:
     name: Build module
-    runs-on: [ubuntu-latest]
+    runs-on:
+      - self-hosted
+      - commercial
+      - builder
     container:
-      image: mcr.microsoft.com/powershell:latest
+      image: mcr.microsoft.com/dotnet/sdk:latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -27,3 +30,7 @@ jobs:
         with:
           name: release
           path: release
+
+      - name: Publish to Nexus
+        shell: pwsh
+        run: Invoke-Build Publish -NugetServer ${{ secrets.NEXUS_URL }} -NugetApiKey ${{ secrets.NEXUS_APIKEY }}
