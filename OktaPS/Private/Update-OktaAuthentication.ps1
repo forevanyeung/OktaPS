@@ -19,7 +19,7 @@ Function Update-OktaAuthentication {
 
             Write-Host "Okta session expired ($Script:OktaSSOExpirationUTC UTC)"
             # Remove-Variable OktaSSO,OktaSSOExpirationUTC -Scope Script
-            Connect-Okta -OrgUrl $Script:OktaOrg -Credential $Script:OktaUsername
+            Connect-Okta -OrgUrl $Script:OktaDomain -Credential $Script:OktaUsername
         }
 
         "SSWS" {
