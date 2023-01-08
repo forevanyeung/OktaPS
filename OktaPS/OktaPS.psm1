@@ -26,3 +26,14 @@ Foreach($t in $ModuleTypes) {
     Write-Verbose "Appending type data: $($t.FullName)"
     Update-TypeData -Append $t
 }
+
+# Import modules
+$ModuleImports = @( Get-ChildItem -Path "$ModulePath\pwsh_modules\" -Filter *.psm1 -Recurse -ErrorAction SilentlyContinue )
+Foreach($import in $ModuleImports) {
+    Try {
+        Write-Verbose "Importing module: $($import.FullName)"
+        Import-Module $import -Force
+    } Catch {
+        Write-Error "Failed to import module $($import.FullName): $_"
+    }
+}
