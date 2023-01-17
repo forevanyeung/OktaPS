@@ -8,6 +8,6 @@
     DevDependencies = @{
         # Pester = ""
         # PsScriptAnalyzer = ""
-        # platyPS = ""
+        # platyPS = "PowerShell/platyPS"
     }
 }
