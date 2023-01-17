@@ -39,7 +39,7 @@ Function Connect-Okta {
         $Save = $false
     )
 
-    
+    $defaultYamlPath = Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta" "okta.yaml"
     Switch($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
             # https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/main/
@@ -48,14 +48,14 @@ Function Connect-Okta {
             # 3. An okta.yaml file in a .okta folder in the current user's home directory (~/.okta/okta.yaml or %userprofile%\.okta\okta.yaml)
 
             If(Test-Path ($oktaYAMLPath = Join-Path ".okta" "okta.yaml")) {
-                Write-Verbose "Connecting to Okta using okta.yaml file in current working directory"
                 $useYAML = $true
-            } ElseIf(Test-Path ($oktaYAMLPath = Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta" "okta.yaml")) {
-                Write-Verbose "Connecting to Okta using okta.yaml file in user's home directory"
+            } ElseIf(Test-Path ($oktaYAMLPath = $defaultYamlPath)) {
                 $useYAML = $true
             }
         
             If($useYAML) {
+                Write-Verbose "Connecting to Okta using okta.yaml file: $oktaYAMLPath"
+
                 $yaml = Get-Content $oktaYAMLPath | ConvertFrom-Yaml
                 $config = $yaml.okta.client
         
@@ -75,7 +75,7 @@ Function Connect-Okta {
                     $OrgUrl = $config.orgUrl
                     $Credential = Get-Credential $config.username
                     $AuthFlow = "Credential"
-                    
+                    Write-Verbose $OrgUrl
                 } Else {
                     Write-Error "Unknown authorization mode"
                 }
@@ -99,17 +99,37 @@ Function Connect-Okta {
     Switch($AuthFlow) {
         "SSWS" {
             Write-Verbose "Using API auth method"
-            Connect-OktaAPI -OktaDomain $OrgUrl -API $API
+            Connect-OktaAPI -OktaDomain $OrgUrl -API $API -ErrorAction Stop
+
+            $saveConfig = @{
+                orgUrl = $OrgUrl
+                authorizationMode = "SSWS"
+                token = $API
+            }
         }
 
         "PrivateKey" {
             Write-Verbose "Using OAuth 2.0 private key auth method"
-            Connect-OktaPrivateKey -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -PrivateKey $PrivateKey
+            Connect-OktaPrivateKey -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -PrivateKey $PrivateKey -ErrorAction Stop
         }
 
         "Credential" {
             Write-Verbose "Using Credential auth method"
-            Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential
+            Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
+
+            $saveConfig = @{
+                orgUrl = $OrgUrl
+                username = $Credential.UserName
+            }
         }
+    }
+
+    If($Save) {
+        $null = New-Item -ItemType File -Path $defaultYamlPath -Force
+        @{
+            okta = @{
+                client = $saveConfig
+            }
+        } | ConvertTo-Yaml -OutFile $defaultYamlPath -Force
     }
 }
