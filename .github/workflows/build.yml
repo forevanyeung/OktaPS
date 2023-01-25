@@ -1,5 +1,8 @@
 name: Build OktaPS module
 on: 
+  push:
+    branches:
+    - main
   workflow_dispatch
 
 jobs:
