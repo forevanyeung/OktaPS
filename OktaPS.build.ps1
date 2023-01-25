@@ -21,11 +21,13 @@ Enter-Build {
 
     # Define folders
     $buildFolder = Join-Path $BuildRoot "Build"                                 # /OktaPS/Build/
-    $sourceFolder = Join-Path $BuildRoot $config.Module                         # /OktaPS
-    $outputFolder = Join-Path $BuildRoot $config.Output                         # /release
+    $sourceFolder = Join-Path $BuildRoot $config.Module                         # /OktaPS/
+    $outputFolder = Join-Path $BuildRoot $config.Output                         # /release/
     $sourceManifestPath = Join-Path $sourceFolder ($config.Module + ".psd1")    # /OktaPS/OktaPS.psd1
     $outputManifestPath = Join-Path $outputFolder ($config.Module + ".psd1")    # /release/OktaPS.psd1
     $pwshModuleFolder = Join-Path $outputFolder "pwsh_modules"                  # /release/pwsh_modules/
+    $docsFolder = Join-Path $BuildRoot "Docs"                                   # /Docs/
+    $docsReferenceFolder = Join-Path $docsFolder "reference"                    # /Docs/reference/
 
     # Dot source build functions
     $build = @( Get-ChildItem -Path $buildFolder -Filter "*.ps1" -ErrorAction SilentlyContinue )
