@@ -122,7 +122,13 @@ Function Connect-Okta {
                 username = $Credential.UserName
             }
         }
+
+        Default {
+            Write-Error "Unknown authentication flow: $AuthFlow"
+        }
     }
+
+    Write-Host "Connected to $OrgUrl"
 
     If($Save) {
         $null = New-Item -ItemType File -Path $defaultYamlPath -Force

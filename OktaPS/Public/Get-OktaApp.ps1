@@ -28,8 +28,10 @@ Function Get-OktaApp {
             }
         }
     } ElseIf($PSCmdlet.ParameterSetName -like "ByIdentity") {
+        Write-Error "Not Implemented"
         # TODO
     } ElseIf($PSCmdlet.ParameterSetName -like "ByGroup") {
+        Write-Error "Not-Implemented"
         # TODO
     }
 
