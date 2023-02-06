@@ -91,9 +91,9 @@ Function Get-OktaUser {
             }
         }
     }
-
+    
+    # Return $user_query
+ 
     $OktaUser = ConvertTo-OktaUser -InputObject $user_query
     Return $OktaUser
-
-    # Return $user_query
 }

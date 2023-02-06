@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Types>
     <Type>
-        <Name>Okta.User</Name>
+        <Name>OktaUser</Name>
         <Members>
             <MemberSet>
                 <Name>PSStandardMembers</Name>
