@@ -6,19 +6,17 @@ Function Add-OktaGroupMember {
         $Group,
 
         [Parameter()]
-        [String[]]
+        [OktaUser[]]
         $Members
     )
 
-    $OktaGroup = Get-OktaGroup -Identity $Group -ErrorAction Stop
+    $OktaGroup = Get-OktaGroup -Name $Group -ErrorAction Stop
     $GroupId = $OktaGroup.id
 
-    Foreach($m in $Members) {
-        $member = Get-OktaUser -Identity $m
+    Foreach($member in $Members) {
         If($member.id) {
             Write-Verbose "Adding $($member.login) to $($OktaGroup.Name)"
             Invoke-OktaRequest -Method "PUT" -Endpoint "api/v1/groups/$GroupId/users/$($member.id)"
         }
     }
-    
 }

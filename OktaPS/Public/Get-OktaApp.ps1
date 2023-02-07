@@ -6,7 +6,7 @@ Function Get-OktaApp {
         $App,
 
         [Parameter(ParameterSetName="ByIdentity")]
-        [String]
+        [OktaUser]
         $Identity,
 
         [Parameter(ParameterSetName="ByGroup")]
