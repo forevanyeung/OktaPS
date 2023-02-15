@@ -6,7 +6,7 @@ Function Get-OktaApp {
         $App,
 
         [Parameter(ParameterSetName="ByIdentity")]
-        [String]
+        [OktaUser]
         $Identity,
 
         [Parameter(ParameterSetName="ByGroup")]
@@ -28,8 +28,10 @@ Function Get-OktaApp {
             }
         }
     } ElseIf($PSCmdlet.ParameterSetName -like "ByIdentity") {
+        Write-Error "Not Implemented"
         # TODO
     } ElseIf($PSCmdlet.ParameterSetName -like "ByGroup") {
+        Write-Error "Not-Implemented"
         # TODO
     }
 

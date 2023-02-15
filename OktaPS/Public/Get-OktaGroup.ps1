@@ -3,7 +3,7 @@ Function Get-OktaGroup {
     param (
         [Parameter(Mandatory=$true)]
         [String]
-        $Identity,
+        $Name,
 
         [Parameter()]
         [ValidateSet("OKTA_GROUP","APP_GROUP")]
@@ -12,14 +12,14 @@ Function Get-OktaGroup {
     )
 
     # try matching group id
-    $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/$Identity" -ErrorAction SilentlyContinue
+    $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/$Name" -ErrorAction SilentlyContinue
     If(-not $group) {
         # try matching group name
-        $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups?q=$Identity" -ErrorAction SilentlyContinue
+        $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups?q=$Name" -ErrorAction SilentlyContinue
     }
 
     If(-not $group) {
-        Throw "Group not found: $Identity"
+        Throw "Group not found: $Name"
     }
 
     $GroupObject = Foreach($g in $group) {

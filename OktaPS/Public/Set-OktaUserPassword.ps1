@@ -1,57 +1,50 @@
 Function Set-OktaUserPassword {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="PasswordChange")]
     param (
-        [Parameter(ParameterSetName="PasswordChangeByIdentity", Position=0, Mandatory)]
-        [Parameter(ParameterSetName="PasswordResetByIdentity", Position=0, Mandatory)]
-        [String]
+        [Parameter(ParameterSetName="PasswordChange", Position=0, ValueFromPipeline, Mandatory)]
+        [Parameter(ParameterSetName="PasswordReset", Position=0, ValueFromPipeline, Mandatory)]
+        [OktaUser]
         $Identity,
 
-        [Parameter(ParameterSetName="PasswordChangeByOktaUser", ValueFromPipeline, Mandatory)]
-        [Parameter(ParameterSetName="PasswordResetByOktaUser", ValueFromPipeline, Mandatory)]
-        [PSTypeName("Okta.User")]
-        $OktaUser,
-
-        [Parameter(ParameterSetName="PasswordChangeByIdentity", Mandatory)]
-        [Parameter(ParameterSetName="PasswordChangeByOktaUser", Mandatory)]
+        [Parameter(ParameterSetName="PasswordChange", Mandatory)]
         [SecureString]
         $OldPassword,
 
-        [Parameter(ParameterSetName="PasswordChangeByIdentity", Mandatory)]
-        [Parameter(ParameterSetName="PasswordChangeByOktaUser", Mandatory)]
+        [Parameter(ParameterSetName="PasswordChange", Mandatory)]
         [SecureString]
         $NewPassword,
 
-        [Parameter(ParameterSetName="PasswordResetByIdentity", Mandatory)]
-        [Parameter(ParameterSetName="PasswordResetByOktaUser", Mandatory)]
+        [Parameter(ParameterSetName="PasswordReset", Mandatory)]
         [Switch]
         $Reset,
 
-        [Parameter(ParameterSetName="PasswordResetByIdentity")]
-        [Parameter(ParameterSetName="PasswordResetByOktaUser")]
+        [Parameter(ParameterSetName="PasswordReset")]
         [Switch]
         $AsPlainText
     )
 
-    If($PSCmdlet.ParameterSetName -contains "ByIdentity") {
-        $OktaUser = Get-OktaUser -Identity $Identity -ErrorAction Stop
-    }
-
-    If($PSCmdlet.ParameterSetName -contains "PasswordChange") {
-        $null = Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/users/$($OktaUser.id)/credentials/change_password" -Body @{
-            "oldPassword" = @{ "value" = (ConvertFrom-SecureString $OldPassword -AsPlainText) }
-            "newPassword" = @{ "value" = (ConvertFrom-SecureString $NewPassword -AsPlainText) }
-        }
-
-        Return 
-
-    } else {
-        If($AsPlainText) {
-            $tempPassword = Reset-OktaUserPassword -OktaUser $OktaUser -AsPlainText
-        } else {
-            $tempPassword = Reset-OktaUserPassword -OktaUser $OktaUser
-        }
-
-        Return $tempPassword
-    }
+    switch($PSCmdlet.ParameterSetName) {
+        "PasswordChange" { 
+            $null = Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/users/$($Identity.id)/credentials/change_password" -Body @{
+                "oldPassword" = @{ "value" = (ConvertFrom-SecureString $OldPassword -AsPlainText) }
+                "newPassword" = @{ "value" = (ConvertFrom-SecureString $NewPassword -AsPlainText) }
+            }
     
+            Return 
+        }
+
+        "PasswordReset" {
+            If($AsPlainText) {
+                $tempPassword = Reset-OktaUserPassword -Identity $Identity -AsPlainText
+            } else {
+                $tempPassword = Reset-OktaUserPassword -Identity $Identity
+            }
+    
+            Return $tempPassword
+        }
+
+        Default {
+            throw [System.ArgumentOutOfRangeException] "Unknown parameter set: $($PSCmdlet.ParameterSetName)"
+        }
+    }
 }

@@ -2,7 +2,7 @@ Function Add-OktaAppMember {
     [CmdletBinding()]
     param (
         [Parameter()]
-        [String[]]
+        [OktaUser[]]
         $Identity,
 
         [Parameter()]
@@ -15,11 +15,9 @@ Function Add-OktaAppMember {
     }
 
     process {
-        foreach($user in $Identity) {    
-            $OktaUser = Get-OktaUser -Identity $user     
-
+        foreach($user in $Identity) {
             Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/apps/$($OktaApp.Id)/users" -Body @{
-                id = $OktaUser.Id
+                id = $user.Id
                 scope = "USER"
             }
         }

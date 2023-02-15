@@ -22,10 +22,6 @@ Function Invoke-OktaRequest {
         $Body,
 
         [Parameter()]
-        [String]
-        $OktaDomain = $Script:OktaAdminDomain,
-
-        [Parameter()]
         [Switch]
         $PassThru,
 
@@ -78,7 +74,8 @@ Function Invoke-OktaRequest {
     }
 
     # Request
-    $request_uri = "$OktaDomain/$Endpoint"
+    # TODO: Add ability to send request to OktaDomain or OktaAdminDomain (default)
+    $request_uri = "$Script:OktaAdminDomain/$Endpoint"
 
     if ($PSCmdlet.ShouldProcess($request_uri)) {
         # supports pagination

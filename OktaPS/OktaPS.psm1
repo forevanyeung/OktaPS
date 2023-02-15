@@ -6,34 +6,41 @@ $ModulePath = $PSScriptRoot -eq "" ? $($pseditor.geteditorcontext().currentfile.
 $Public = @( Get-ChildItem -Path $ModulePath\Public\*.ps1 -ErrorAction SilentlyContinue )
 $Private = @( Get-ChildItem -Path $ModulePath\Private\*.ps1 -ErrorAction SilentlyContinue )
 
-Foreach($import in @($Public + $Private)) {
+Foreach($fn in @($Public + $Private)) {
     Try {
-        Write-Verbose "Importing function: $($import.FullName)"
+        Write-Host "Importing function: $($fn.FullName)"
         
         # Dot source the functions
-        . $import.FullName
+        . $fn.FullName
 
         # export function
-        Export-ModuleMember -Function $import.BaseName -ErrorAction SilentlyContinue
+        Export-ModuleMember -Function $fn.BaseName -ErrorAction SilentlyContinue
     } Catch {
-        Write-Error -Message "Failed to import function $($import.FullName): $_"
+        Write-Error -Message "Failed to import function $($fn.FullName): $_"
     }   
 }
 
 # Add Types
 $ModuleTypes = @( Get-ChildItem -Path $ModulePath\Types\*.ps1xml -ErrorAction SilentlyContinue )
 Foreach($t in $ModuleTypes) {
-    Write-Verbose "Appending type data: $($t.FullName)"
+    Write-Host "Appending type data: $($t.FullName)"
     Update-TypeData -Append $t
 }
 
-# Import modules
+# Add Classes
+$ModuleClasses = @( Get-ChildItem -Path $ModulePath\Types\*.class.ps1 -ErrorAction SilentlyContinue )
+Foreach($class in $ModuleClasses) {
+    Write-Host "Dot sourcing class: $($class.FullName)"
+    . $class.FullName
+}
+
+# Import dependency modules
 $ModuleImports = @( Get-ChildItem -Path "$ModulePath\pwsh_modules\" -Filter *.psm1 -Recurse -ErrorAction SilentlyContinue )
-Foreach($import in $ModuleImports) {
+Foreach($mod in $ModuleImports) {
     Try {
-        Write-Verbose "Importing module: $($import.FullName)"
-        Import-Module $import -Force
+        Write-Host "Importing module: $($mod.FullName)"
+        Import-Module $mod -Force
     } Catch {
-        Write-Error "Failed to import module $($import.FullName): $_"
+        Write-Error "Failed to import module $($mod.FullName): $_"
     }
 }

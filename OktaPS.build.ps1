@@ -84,6 +84,17 @@ task CopyModuleManifest {
 
 # Synopsis: Assemble the module for release
 task AssembleModule {
+    $types = Join-Path $sourceFolder "Types"
+    $classes = Get-ChildItem -Path $types -Filter "*.class.ps1" 
+    Write-Host ""
+    $CombineFiles += "## CLASSES ## `r`n`r`n"
+    $classes | ForEach-Object {
+        Write-Host "          $($_.Name)"
+        $CombineFiles += (Get-content $_ -Raw) + "`r`n`r`n"
+    }
+    Write-Host -NoNewLine "     Combining classes source files"
+    Write-Host -ForegroundColor Green '...Complete!'
+
     $private = Join-Path $sourceFolder "Private"
     Write-Host "     Private Source Files: $private"
     $CombineFiles += "## PRIVATE MODULE FUNCTIONS AND DATA ## `r`n`r`n"
