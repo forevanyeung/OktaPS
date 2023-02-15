@@ -17,7 +17,6 @@ Class OktaUser {
     [string] $_links
     [hashtable] $_profile
 
-
     OktaUser([string]$identity) {
         $that = Get-OktaUser -Identity $identity -ErrorAction Stop
         foreach($key in $that.psobject.properties.name) {
