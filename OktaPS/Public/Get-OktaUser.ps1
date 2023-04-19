@@ -14,6 +14,10 @@ Function Get-OktaUser {
         [String]
         $Search,
 
+        [Parameter(ParameterSetName = 'ListUserFind', Mandatory, HelpMessage="Okta API search criteria. https://developer.okta.com/docs/reference/api/users/#find-users")]
+        [String]
+        $Find,
+
         [Parameter(ParameterSetName = 'GetUser')]
         [Parameter(ParameterSetName = 'ListUserFilter')]
         [Parameter(ParameterSetName = 'ListUserSearch')]
@@ -59,6 +63,15 @@ Function Get-OktaUser {
             }
         }
 
+        "ListUserSearch" {
+            $url_builder = @{}
+            $url_builder['limit'] = $Limit
+            $url_builder['search'] = $Search.Replace("'","`"") #okta query has to be in double-quotes
+            $querystring = New-HttpQueryString -QueryParameter $url_builder
+    
+            $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
+        }
+
         "ListUserFilter" {
             $url_builder = @{}
             $url_builder['limit'] = $Limit
@@ -68,10 +81,10 @@ Function Get-OktaUser {
             $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
         }
 
-        "ListUserSearch" {
+        "ListUserFind" {
             $url_builder = @{}
             $url_builder['limit'] = $Limit
-            $url_builder['search'] = $Search.Replace("'","`"") #okta query has to be in double-quotes
+            $url_builder['q'] = $Find
             $querystring = New-HttpQueryString -QueryParameter $url_builder
     
             $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
