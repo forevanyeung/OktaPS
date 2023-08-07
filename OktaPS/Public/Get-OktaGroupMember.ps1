@@ -6,7 +6,7 @@ Function Get-OktaGroupMember {
         $Group
     )
 
-    $OktaGroup = Get-OktaGroup -Identity $Group -ErrorAction Stop
+    $OktaGroup = Get-OktaGroup -Name $Group -ErrorAction Stop
     $GroupId = $OktaGroup.id
 
     $members = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/groups/$GroupId/users"
