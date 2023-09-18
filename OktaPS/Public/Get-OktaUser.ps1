@@ -1,6 +1,6 @@
 Function Get-OktaUser {
     [CmdletBinding(DefaultParameterSetName='AllUsers')]
-    [OutputType([OktaUser])]
+    [OutputType("OktaUser")]
     param (
         [Parameter(ParameterSetName = 'GetUser', Mandatory, Position=0, HelpMessage="Okta user ID, login, or short-login")]
         [String[]]
