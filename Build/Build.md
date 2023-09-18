@@ -4,7 +4,7 @@ OktaPS uses the [InvokeBuild](https://github.com/nightroman/Invoke-Build) module
 
 To build a production release, run `Invoke-Build` in the root directory, the compiled module will compile in the `release/` directory.
 
-For development builds, run `Invoke-Build Install` in the root directory to install dependencies. Then import the module with `Import-Module ./OktaPS`. The install build script does not compile any code, but public and private functions are exported for easier testing. You will also need to dot source any `*.class.ps1` files, see the [Classes](#classes) section for more details. 
+For development builds, run `Invoke-Build Install` in the root directory to download the dependencies. Then import the module with `Import-Module ./OktaPS`. The install build script does not compile any code, but public and private functions are exported for easier testing. 
 
 ## Structure
 `Build/` - private functions related to build  
@@ -23,14 +23,8 @@ Dependencies = @{
 > Support for traditional RequiredModules will be added when the need arises. I like the idea of NPM's dependency style.
 
 ## Classes
-During development you need to manually dot source each of the classes once at the begining. Otherwise, you may get errors like `Unable to find type [OktaUser]`. For some reason dot sourcing it in the `.psd1` file does not make it available in the module. 
+Classes can only be imported into a PowerShell session once, if you import a class again after it has already been imported, it won't change the class. That's why if you are developing classes you will need to restart your Powershell session and import the module each time.
 
-```pwsh
-. '/OktaPS/OktaPS/Types/OktaUser.class.ps1'
-```
-
-After you dot sources the class once, you do not need to dot source it again for the remainder of the Powershell session, even if you re-import the module. 
-
-Unless you are making changes to classes, in that case, you will need to restart your Powershell session and import the module each time. Powershell only load a class once during a session.
-
-Here is a great write-up of using classes in Powershell, https://stephanevg.github.io/powershell/class/module/DATA-How-To-Write-powershell-Modules-with-classes/
+Here are some articles about using classes in Powershell
+- https://stephanevg.github.io/powershell/class/module/DATA-How-To-Write-powershell-Modules-with-classes/
+- https://mdgrs.hashnode.dev/powershell-classes-and-sessionstate
