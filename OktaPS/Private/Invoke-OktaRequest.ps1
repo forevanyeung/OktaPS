@@ -82,7 +82,25 @@ Function Invoke-OktaRequest {
         $next = $True
         $return = while($next) {
             $Script:OktaDebugLastRequestUri = $request_uri
-            $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
+            try {
+                $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
+            } catch [Microsoft.PowerShell.Commands.HttpResponseException] {
+                If($_.Exception.Response.StatusCode -eq 429) {
+                    Write-Debug "X-Rate-Limit-Limit: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Limit'))"
+                    Write-Debug "X-Rate-Limit-Remaining: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Remaining'))"
+                    Write-Debug "X-Rate-Limit-Reset: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Reset'))"
+
+                    $limit_reset = [System.DateTimeOffset]::FromUnixTimeSeconds($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Reset')[0])
+                    $offset = $limit_reset.Offset.TotalSeconds
+                    Write-Host "Okta Rate Limit Exceeded. $($limit_reset.LocalDateTime.ToString())"
+
+                    # TODO: wait until time elapses and continue
+                    Start-Sleep -Seconds $offset
+                }
+            } catch {
+                Write-Host "Unknown error occurred."
+                Throw $_
+            }
 
             # Response
             If($PassThru) {
@@ -91,12 +109,6 @@ Function Invoke-OktaRequest {
             } elseif(($response.StatusCode -ge 200) -and ($response.StatusCode -le 299)) {
                 $response.Content | ConvertFrom-Json
                 
-            
-            } elseif ($response.StatusCode -eq 429) {
-                $limit_reset = (([System.DateTimeOffset]::FromUnixTimeSeconds($response.Headers['x-rate-limit-reset'])).DateTime).ToString()
-                Write-Host "Okta Rate Limit Exceeded. $limit_reset"
-                # wait until time elapses and continue
-            
             } else {
                 # uncaught status code, return the raw and exit
                 Return $response

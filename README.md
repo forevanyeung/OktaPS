@@ -6,18 +6,14 @@
 A PowerShell module for Okta administration. Supports credential, private key, and API authentication and pipelining objects.
 
 ## Installation
-OktaPS is published to the CLEAR  Nuget server. This is the recommended method for installing OktaPS. You will need to connect to VPN to reach Nuget.
+OktaPS is published to a Nuget repository on the CLEAR Nexus server. This is the recommended method for installing OktaPS. You will need to connect to VPN to reach Nexus.
 ```pwsh
 Register-PSRepository -Name "CLEAR" -SourceLocation "https://nexus.clearme.com/repository/nuget-hosted/"
 
 Install-Module -Name "OktaPS" -Repository "CLEAR"
 ```
 
-You can also run a development build of OktaPS from source. The development build will export public and private functions to be available from the shell. [InvokeBuild](https://github.com/nightroman/Invoke-Build) is used build the project. Read more about [building OktaPS](./Build/Build.md). 
-```pwsh
-Invoke-Build Install
-Import-Module "./OktaPS"
-```
+You can also run a development build of OktaPS from source. The development build will export public and private functions to be available from the console. Read more about [building OktaPS](./Build/Build.md). 
 
 ## Getting Started
 1. Connect to your Okta organization with the OrgUrl and your username, PowerShell will prompt you for the password. If you have 2FA enabled on your account, it will automatically send a push notification (Duo only supported at this time). See the Wiki for more authentication options (API or private key).
