@@ -1,5 +1,5 @@
 Function Set-OktaAuthentication {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = "SSWS")]
     param (
         # Parameter help description
         [Parameter(Mandatory)]
