@@ -35,11 +35,11 @@ Foreach($f in $ModuleFormats) {
 }
 
 # Add Classes
-$ModuleClasses = @( Get-ChildItem -Path $ModulePath\Types\*.class.ps1 -ErrorAction SilentlyContinue )
-Foreach($class in $ModuleClasses) {
-    Write-Host "Dot sourcing class: $($class.FullName)"
-    . $class.FullName
-}
+# $ModuleClasses = @( Get-ChildItem -Path $ModulePath\Types\*.class.ps1 -ErrorAction SilentlyContinue )
+# Foreach($class in $ModuleClasses) {
+#     Write-Host "Dot sourcing class: $($class.FullName)"
+#     . $class.FullName
+# }
 
 # Import dependency modules
 $ModuleImports = @( Get-ChildItem -Path "$ModulePath\pwsh_modules\" -Filter *.psm1 -Recurse -ErrorAction SilentlyContinue )
