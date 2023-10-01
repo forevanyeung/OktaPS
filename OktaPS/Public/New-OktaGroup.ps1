@@ -7,17 +7,14 @@ Function New-OktaGroup {
 
         [Parameter()]
         [String]
-        $Description
+        $Description = ""
     )
 
     $reqBody = @{
         "profile" = @{
             "name" = $Name
+            "description" = $Description
         }
-    }
-
-    If($Description) {
-        $reqBody['profile']['description'] = $Description
     }
 
     $response = Invoke-OktaRequest -Method "POST" -Endpoint "api/v1/groups" -Body $reqBody
