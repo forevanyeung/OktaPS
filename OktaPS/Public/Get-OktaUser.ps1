@@ -54,6 +54,11 @@ Function Get-OktaUser {
             $user_query = Foreach($i in $Identity) {
                 $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
 
+                If($null -eq $query) {
+                    Write-Error "Could not find user $i"
+                    Continue
+                }
+
                 $groups_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i/groups" -ErrorAction SilentlyContinue
                 If($groups_query) {
                     $query | Add-Member -MemberType NoteProperty -Name "_groups" -Value $groups_query
@@ -108,6 +113,10 @@ Function Get-OktaUser {
     
     # Return $user_query
  
-    $OktaUser = ConvertTo-OktaUser -InputObject $user_query
-    Return $OktaUser
+    If($null -ne $user_query) {
+        $OktaUser = ConvertTo-OktaUser -InputObject $user_query
+        Return $OktaUser
+    }
+
+    Return
 }
