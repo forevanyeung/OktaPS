@@ -28,10 +28,7 @@ Function Connect-OktaPrivateKey {
         "sub" = $ClientId
     }
 
-    $key = $PrivateKey.replace("-----BEGIN PRIVATE KEY-----","").replace("-----END PRIVATE KEY-----","")
-    $keyB = [System.Convert]::FromBase64String($key)
-
-    $jwt = New-JsonWebToken -Claims $payload -HashAlgorithm SHA256 -PrivateKey $keyB
+    $jwt = New-JsonWebToken -Claims $payload -HashAlgorithm SHA256 -PrivateKey $PrivateKey
 
     # Get an limited lifetime access token
     $auth = Invoke-RestMethod -Method "POST" -Uri $OAuthUrl -Body @{
