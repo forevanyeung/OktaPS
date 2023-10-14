@@ -2,13 +2,17 @@
 
 [CmdletBinding(DefaultParameterSetName="Build")]
 param (
+    [Parameter()]
+    [Version]
+    $SemVer = (property SemVer),
+
     [Parameter(ParameterSetName="Publish")]
     [String]
-    $NugetServer, 
+    $NugetServer = (property NugetServer ""), 
     
     [Parameter(ParameterSetName="Publish")]
     [String]
-    $NugetApiKey
+    $NugetApiKey = (property NugetApiKey "")
 )
 
 $BuildRoot = $BuildRoot ?? (Get-Location).Path                                  # /
@@ -58,14 +62,20 @@ task CleanPwshModule {
 
 # Synopsis: Increment the build number
 task BumpBuildNumber {
-    # Start by importing the manifest to determine the version, then add 1 to the Build
-    $manifest = Test-ModuleManifest -Path $sourceManifestPath
-    [System.Version]$version = $manifest.Version
-    [String]$newVersion = New-Object -TypeName System.Version -ArgumentList ($version.Major, $version.Minor, ($version.Build + 1))
-    Write-Host "     New Module version: $newVersion"
+    # if semver is not specified, try to get it from gitversion, default to 0.0.0
+    if(-not $SemVer) {
+        try {
+            $SemVer = [version](gitversion | ConvertFrom-Json).SemVer
+        } catch {
+            $SemVer = [version]"0.0.0"
+        }
+    }
+
+    # Get module version from gitversion
+    Write-Host "     New Module version: $SemVer"
 
     # Update manifest with new version
-    Update-ModuleManifest -ModuleVersion $newVersion -Path $sourceManifestPath
+    Update-ModuleManifest -ModuleVersion $SemVer -Path $sourceManifestPath
 }
 
 # Synopsis: 
@@ -201,8 +211,11 @@ task UpdateModuleManifest {
 }
 
 task PublishInternalNexus {
+    If(-not $NugetServer) {
+        throw "missing nugetserver"
+    }
+
     If(-not $NugetApiKey) {
-        $NugetApiKey = (property NugetApiKey)
         throw "missing nugetapikey"
     }
 
