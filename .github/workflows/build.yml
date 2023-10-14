@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install InvokeBuild module
         shell: pwsh
@@ -24,9 +26,18 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module InvokeBuild
 
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.10.2
+        with:
+          versionSpec: '5.12.0'
+
+      - name: Determine Version
+        id:   gitversion # id to later be referenced
+        uses: gittools/actions/gitversion/execute@v0.10.2
+
       - name: Perform an Invoke-Build from the command line
         shell: pwsh
-        run: Invoke-Build
+        run: Invoke-Build -SemVer ${{ steps.gitversion.outputs.MajorMinorPatch }}}
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
