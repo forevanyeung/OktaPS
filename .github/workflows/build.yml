@@ -37,7 +37,7 @@ jobs:
 
       - name: Perform an Invoke-Build from the command line
         shell: pwsh
-        run: Invoke-Build -SemVer ${{ steps.gitversion.outputs.MajorMinorPatch }}}
+        run: Invoke-Build -SemVer ${{ steps.gitversion.outputs.MajorMinorPatch }}
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
