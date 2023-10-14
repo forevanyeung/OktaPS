@@ -4,7 +4,7 @@
 param (
     [Parameter()]
     [Version]
-    $SemVer = (property SemVer),
+    $SemVer = (property SemVer "0.0.0"),
 
     [Parameter(ParameterSetName="Publish")]
     [String]
@@ -58,24 +58,6 @@ task CleanPwshModule {
     Write-Host -NoNewLine "     Cleaning up directory: $pwshModuleFolder" 
     $null = New-Item $pwshModuleFolder -ItemType Directory
     Write-Host -ForegroundColor Green ' ...Complete!'
-}
-
-# Synopsis: Increment the build number
-task BumpBuildNumber {
-    # if semver is not specified, try to get it from gitversion, default to 0.0.0
-    if(-not $SemVer) {
-        try {
-            $SemVer = [version](gitversion | ConvertFrom-Json).SemVer
-        } catch {
-            $SemVer = [version]"0.0.0"
-        }
-    }
-
-    # Get module version from gitversion
-    Write-Host "     New Module version: $SemVer"
-
-    # Update manifest with new version
-    Update-ModuleManifest -ModuleVersion $SemVer -Path $sourceManifestPath
 }
 
 # Synopsis: 
@@ -203,6 +185,24 @@ task DownloadDependencies {
     }
 }
 
+# Synopsis: Increment the build number
+task BumpBuildNumber {
+    # if semver is not specified, try to get it from gitversion, default to 0.0.0
+    if((-not $SemVer) -or ($SemVer -eq [version]"0.0.0")) {
+        try {
+            $SemVer = [version](gitversion | ConvertFrom-Json).SemVer
+        } catch {
+            $SemVer = [version]"0.0.0"
+        }
+    }
+
+    # Get module version from gitversion
+    Write-Host "     New Module version: $SemVer"
+
+    # Update manifest with new version
+    Update-ModuleManifest -Path $outputManifestPath -ModuleVersion $SemVer 
+}
+
 # .SYNOPSIS Final updates to module manifest
 task UpdateModuleManifest {
     Write-Host -NoNewLine "     Removing Prerelease tag from module manifest"
@@ -238,11 +238,11 @@ task PublishInternalNexus {
 }
 
 task . CleanOutput, 
-       BumpBuildNumber, 
        CopyModuleManifest, 
        AssembleModule, 
        AssembleTypes, 
        DownloadDependencies, 
+       BumpBuildNumber,
        UpdateModuleManifest
 
 task Install {
