@@ -12,6 +12,12 @@ Function Get-OktaConfig {
             Return $Path
         }
 
+        # if the path is absolute, no use in searching for it
+        If([System.IO.Path]::IsPathRooted($Path)) {
+            Write-Error "Could not find Okta config file at $Path"
+            Return
+        }
+
         # Search for the file in the .okta directory of the current working directory
         If(Test-Path ($configPath = Join-Path ".okta" $Path)) {
             Return $configPath
