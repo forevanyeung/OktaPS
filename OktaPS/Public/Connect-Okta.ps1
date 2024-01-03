@@ -37,48 +37,45 @@ Function Connect-Okta {
         [Parameter(ParameterSetName = 'CredentialAuth')]
         [Parameter(ParameterSetName = 'APIAuth')]
         [Switch]
-        $Save = $false
+        $Save = $false,
+
+        # Path to .yaml config file
+        [Parameter(ParameterSetName = 'SavedConfig')]
+        [String]
+        $Config = ""
     )
 
-    $defaultYamlPath = Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta" "okta.yaml"
     Switch($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
-            # https://developer.okta.com/docs/guides/implement-oauth-for-okta-serviceapp/main/
-            # 1. Environment variables (in this case, cmdlet parameters)
-            # 2. An okta.yaml file in a .okta folder in the application or project's root directory
-            # 3. An okta.yaml file in a .okta folder in the current user's home directory (~/.okta/okta.yaml or %userprofile%\.okta\okta.yaml)
-
-            If(Test-Path ($oktaYAMLPath = Join-Path ".okta" "okta.yaml")) {
-                $useYAML = $true
-            } ElseIf(Test-Path ($oktaYAMLPath = $defaultYamlPath)) {
-                $useYAML = $true
-            }
-        
-            If($useYAML) {
-                Write-Verbose "Connecting to Okta using okta.yaml file: $oktaYAMLPath"
+            $oktaYAMLPath = Get-OktaConfig -Path $Config
+            If(-not [String]::IsNullOrEmpty($oktaYAMLPath)) {
+                Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
 
                 $yaml = Get-Content $oktaYAMLPath | ConvertFrom-Yaml
-                $config = $yaml.okta.client
-        
-                If($config.authorizationMode -eq "PrivateKey") {
-                    $OrgUrl = $config.orgUrl
-                    $ClientId = $config.clientId
-                    $Scopes = $config.scopes
-                    $PrivateKey = $config.privateKey
+                $yamlConfig = $yaml.okta.client
+
+                If($yamlConfig.authorizationMode -eq "PrivateKey") {
+                    $OrgUrl = $yamlConfig.orgUrl
+                    $ClientId = $yamlConfig.clientId
+                    $Scopes = $yamlConfig.scopes
+                    $PrivateKey = $yamlConfig.privateKey
                     $AuthFlow = "PrivateKey"
         
-                } ElseIf(($config.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($config.token))) {
-                    $OrgUrl = $config.orgUrl
-                    $API = $config.Token
+                } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
+                    $OrgUrl = $yamlConfig.orgUrl
+                    $API = $yamlConfig.Token
                     $AuthFlow = "SSWS"
         
-                } ElseIf(-not [String]::IsNullOrEmpty($config.username)) {
-                    $OrgUrl = $config.orgUrl
-                    $Credential = Get-Credential $config.username
+                } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
+                    $OrgUrl = $yamlConfig.orgUrl
+                    $Credential = Get-Credential $yamlConfig.username
                     $AuthFlow = "Credential"
                     Write-Verbose $OrgUrl
                 } Else {
-                    Write-Error "Unknown authorization mode"
+                    Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
+                    Write-Error "Defaulting to credential auth method"
+                    $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
+                    $AuthFlow = "Credential"
                 }
             } Else {
                 $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
