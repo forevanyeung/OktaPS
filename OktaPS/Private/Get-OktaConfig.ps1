@@ -36,7 +36,15 @@ Function Get-OktaConfig {
         Return $configPath
     }
 
+    If(Test-Path ($configPath = Join-Path ".okta" "okta.yml")) {
+        Return $configPath
+    }
+
     If(Test-Path ($configPath = Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta" "okta.yaml")) {
+        Return $configPath   
+    }
+
+    If(Test-Path ($configPath = Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta" "okta.yml")) {
         Return $configPath   
     }
 }
