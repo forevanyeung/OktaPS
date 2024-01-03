@@ -19,6 +19,7 @@ Function Connect-Okta {
         [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
         [Parameter(ParameterSetName = 'APIAuth', Mandatory=$True)]
         [Alias("OktaDomain")]
+        [ValidatePattern("^https://", ErrorMessage="URL must begin with https://")]
         [String]
         $OrgUrl,
 
@@ -87,11 +88,6 @@ Function Connect-Okta {
 
         "APIAuth" { $AuthFlow = "SSWS" }
         "CredentialAuth" { $AuthFlow = "Credential" }
-    }
-
-    # Validate OrgUrl
-    If(-not $OrgUrl.StartsWith("https://")) {
-        Throw "OrgUrl must start with https://"
     }
 
     Clear-OktaAuthentication
