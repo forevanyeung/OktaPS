@@ -31,7 +31,7 @@ Function Get-OktaGroup {
         "GetGroup" {
             # try matching group id
             $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/$Name" -ErrorAction SilentlyContinue
-            If(-not $group) {
+            If($group.errorCode) {
                 $query = @{}
                 $query["q"] = $Name
 

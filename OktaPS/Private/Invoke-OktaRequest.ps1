@@ -96,6 +96,9 @@ Function Invoke-OktaRequest {
 
                     # TODO: wait until time elapses and continue
                     Start-Sleep -Seconds $offset
+                } else {
+                    Write-Error "$([int]$_.Exception.Response.StatusCode) $($_.Exception.Response.ReasonPhrase)"
+                    Return $_.ErrorDetails.Message | ConvertFrom-Json
                 }
             } catch {
                 Write-Host "Unknown error occurred."
@@ -104,15 +107,12 @@ Function Invoke-OktaRequest {
 
             # Response
             If($PassThru) {
-                $response
-
-            } elseif(($response.StatusCode -ge 200) -and ($response.StatusCode -le 299)) {
-                $response.Content | ConvertFrom-Json
-                
-            } else {
-                # uncaught status code, return the raw and exit
+                # return the raw response, don't follow pagination
                 Return $response
             }
+
+            # send the response back to the loop collector, continue to follow pagination
+            $response.Content | ConvertFrom-Json
 
             # pagination
             If($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
