@@ -43,7 +43,7 @@ Function New-OktaGroupRule {
         }
         "actions" = @{
             "assignUserToGroups" = @{
-                "groupIds" = $Group
+                "groupIds" = @($Group)
             }
         }
     }
