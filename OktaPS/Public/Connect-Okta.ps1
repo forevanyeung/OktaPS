@@ -35,9 +35,17 @@ Function Connect-Okta {
 
         # Save authentication to .yaml config
         [Parameter(ParameterSetName = 'CredentialAuth')]
+        [Parameter(ParameterSetName = 'CredentialAuthSave')]
         [Parameter(ParameterSetName = 'APIAuth')]
+        [Parameter(ParameterSetName = 'APIAuthSave')]
         [Switch]
         $Save = $false,
+
+        # Path to save .yaml config file, defaults to the user's home directory ~/.okta/okta.yaml
+        [Parameter(ParameterSetName = 'CredentialAuthSave')]
+        [Parameter(ParameterSetName = 'APIAuthSave')]
+        [String]
+        $SavePath = (Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta\okta.yaml"),
 
         # Path to .yaml config file
         [Parameter(ParameterSetName = 'SavedConfig')]
@@ -124,11 +132,6 @@ Function Connect-Okta {
     Write-Host "Connected to $OrgUrl"
 
     If($Save) {
-        $null = New-Item -ItemType File -Path $defaultYamlPath -Force
-        @{
-            okta = @{
-                client = $saveConfig
-            }
-        } | ConvertTo-Yaml -OutFile $defaultYamlPath -Force
+        Set-OktaConfig -Path $SavePath -Config $saveConfig
     }
 }
