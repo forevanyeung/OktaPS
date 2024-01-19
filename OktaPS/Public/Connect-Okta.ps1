@@ -49,8 +49,9 @@ Function Connect-Okta {
 
         # Path to .yaml config file
         [Parameter(ParameterSetName = 'SavedConfig')]
+        [ArgumentCompleter({ OktaConfigPathArgumentCompleter @args })]
         [String]
-        $Config = ""
+        $Config
     )
 
     Switch($PSCmdlet.ParameterSetName) {
