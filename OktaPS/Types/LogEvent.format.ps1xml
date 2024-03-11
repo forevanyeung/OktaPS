@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>LogEventTable</Name>
+            <ViewSelectedBy>
+                <TypeName>LogEvent</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>Published</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>EventType</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>DisplayMessage</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Actor</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Target</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem><PropertyName>published</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>eventType</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>displayMessage</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>actor</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>target</PropertyName></TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>
