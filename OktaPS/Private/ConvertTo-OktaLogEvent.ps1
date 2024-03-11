@@ -18,7 +18,7 @@ Function ConvertTo-OktaLogEvent {
             severity = $_.severity
             legacyEventType = $_.legacyEventType
             displayMessage = $_.displayMessage
-            actor = [actor]$actor
+            actor = $actor
             target = @($target)
         }
     }

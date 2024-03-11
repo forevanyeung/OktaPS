@@ -7,6 +7,10 @@ Function ConvertTo-OktaActor {
     )
 
     $Actor | ForEach-Object {
+        If($null -eq $_) {
+            return 
+        }
+        
         [Actor]::new(
             $_.id,
             $_.type,

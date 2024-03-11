@@ -7,6 +7,10 @@ Function ConvertTo-OktaTarget {
     )
 
     $Target | ForEach-Object {
+        If($null -eq $_) {
+            return 
+        }
+
         [Target]::new(
             $_.id,
             $_.type,
