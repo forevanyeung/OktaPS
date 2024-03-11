@@ -1,4 +1,5 @@
 class Actor {
+    [ValidateNotNullOrEmpty()]
     [string]$id
     [string]$type
     [string]$alternateId
@@ -13,12 +14,21 @@ class Actor {
         $this.detailEntry = $detailEntry
     }
 
+    Actor([object]$hashtable) {
+        $this.id = $hashtable.id
+        $this.type = $hashtable.type
+        $this.alternateId = $hashtable.alternateId
+        $this.displayName = $hashtable.displayName
+        $this.detailEntry = $hashtable.detailEntry
+    }
+
     [string] ToString() {
         return $this.displayName
     }
 }
 
 class Target {
+    [ValidateNotNullOrEmpty()]
     [string]$id
     [string]$type
     [string]$alternateId
@@ -31,6 +41,14 @@ class Target {
         $this.alternateId = $alternateId
         $this.displayName = $displayName
         $this.detailEntry = $detailEntry
+    }
+
+    Target([object]$hashtable) {
+        $this.id = $hashtable.id
+        $this.type = $hashtable.type
+        $this.alternateId = $hashtable.alternateId
+        $this.displayName = $hashtable.displayName
+        $this.detailEntry = $hashtable.detailEntry
     }
 
     [string] ToString() {
