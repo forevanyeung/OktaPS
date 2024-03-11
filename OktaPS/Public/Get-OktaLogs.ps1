@@ -30,8 +30,19 @@ Function Get-OktaLogs {
         # Return all pages of results without any prompts
         [Parameter()]
         [switch]
-        $NoPrompt
+        $NoPrompt,
+
+        # Get logs for a specific user, cannot be combined with the Filter parameter
+        [Parameter(ParameterSetName="ByUser", ValueFromPipeline)]
+        [PSTypeName("OktaUser")]
+        $OktaUser
     )
+
+    Switch($PSCmdlet.ParameterSetName) {
+        "ByUser" {
+            $Filter = "actor.id eq ""$($OktaUser.id)"" or target.id eq ""$($OktaUser.id)"""
+        }
+    }
     
     $query = @{
         since = $Since.ToString("o")
