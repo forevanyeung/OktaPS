@@ -21,10 +21,17 @@ Foreach($fn in @($Public + $Private)) {
 }
 
 # Add Types
-$ModuleTypes = @( Get-ChildItem -Path $ModulePath\Types\*.ps1xml -ErrorAction SilentlyContinue )
+$ModuleTypes = @( Get-ChildItem -Path $ModulePath\Types\*.type.ps1xml -ErrorAction SilentlyContinue )
 Foreach($t in $ModuleTypes) {
     Write-Host "Appending type data: $($t.FullName)"
     Update-TypeData -Append $t
+}
+
+# Add Formats
+$ModuleFormats = @( Get-ChildItem -Path $ModulePath\Types\*.format.ps1xml -ErrorAction SilentlyContinue )
+Foreach($f in $ModuleFormats) {
+    Write-Host "Appending format data: $($f.FullName)"
+    Update-FormatData -PrependPath $f
 }
 
 # Add Classes
