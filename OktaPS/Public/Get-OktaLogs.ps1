@@ -11,6 +11,11 @@ Function Get-OktaLogs {
         [datetime]
         $Until = (Get-Date),
 
+        # Filter Expression that filters the results
+        [Parameter()]
+        [String]
+        $Filter,
+
         # The order of the returned events that are sorted by published
         [Parameter()]
         [ValidateSet("ASCENDING", "DESCENDING")]
@@ -22,7 +27,7 @@ Function Get-OktaLogs {
         [int]
         $Limit = 1000,
 
-        # Parameter help description
+        # Return all pages of results without any prompts
         [Parameter()]
         [switch]
         $NoPrompt
@@ -31,7 +36,7 @@ Function Get-OktaLogs {
     $query = @{
         since = $Since.ToString("o")
         until = $Until.ToString("o")
-        filter = ""
+        filter = $Filter
         q = ""
         sortOrder = ""
         limit = $Limit
@@ -39,7 +44,7 @@ Function Get-OktaLogs {
 
     If($NoPrompt) {
         $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/logs" -Query $query
-        Return
+        Return ConvertTo-OktaLogEvent -LogEvent $response
     }
 
     $next = $true
