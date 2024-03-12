@@ -11,12 +11,12 @@ Function ConvertTo-OktaTarget {
             return 
         }
 
-        [Target]::new(
-            $_.id,
-            $_.type,
-            $_.alternateId,
-            $_.displayName,
-            $_.detailEntry
-        )
+        [Target]@{
+            id = $_.id
+            type = $_.type
+            alternateId = $_.alternateId
+            displayName = $_.displayName
+            detailEntry = $_.detailEntry
+        }
     }
 }
