@@ -12,7 +12,7 @@ Function ConvertTo-OktaLogEvent {
 
         [LogEvent]@{
             uuid = $_.uuid
-            published = $_.published
+            published = $_.published.ToLocalTime()
             eventType = $_.eventType
             version = $_.version
             severity = $_.severity
