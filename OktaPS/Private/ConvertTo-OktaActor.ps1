@@ -11,12 +11,12 @@ Function ConvertTo-OktaActor {
             return 
         }
         
-        [Actor]::new(
-            $_.id,
-            $_.type,
-            $_.alternateId,
-            $_.displayName,
-            $_.detailEntry
-        )
+        [Actor]@{
+            id = $_.id
+            type = $_.type
+            alternateId = $_.alternateId
+            displayName = $_.displayName
+            detailEntry = $_.detailEntry
+        }
     }
 }
