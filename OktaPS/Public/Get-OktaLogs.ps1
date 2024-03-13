@@ -1,34 +1,39 @@
 Function Get-OktaLogs {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="ByFilter")]
     param (
         # Filters the lower time bound of the log events published property for bounded queries or persistence time for polling queries
-        [Parameter()]
+        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName="ByUser")]
         [datetime]
         $Since = (Get-Date).AddDays(-7),
 
         # Filters the upper time bound of the log events published property for bounded queries or persistence time for polling queries
-        [Parameter()]
+        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName="ByUser")]
         [datetime]
         $Until = (Get-Date),
 
         # Filter Expression that filters the results
-        [Parameter()]
+        [Parameter(ParameterSetName="ByFilter")]
         [String]
         $Filter,
 
         # The order of the returned events that are sorted by published
-        [Parameter()]
+        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName="ByUser")]
         [ValidateSet("ASCENDING", "DESCENDING")]
         [String]
         $Sort = "ASCENDING",
 
         # Sets the number of results that are returned in the response
-        [Parameter()]
+        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName="ByUser")]
         [int]
         $Limit = 1000,
 
         # Return all pages of results without any prompts
-        [Parameter()]
+        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName="ByUser")]
         [switch]
         $NoPrompt,
 
