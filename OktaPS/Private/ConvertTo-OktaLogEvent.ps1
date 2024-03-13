@@ -1,12 +1,16 @@
 Function ConvertTo-OktaLogEvent {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
+        [Parameter()]
         [Object[]]
         $LogEvent
     )
 
     $LogEvent | ForEach-Object {
+        If($null -eq $_) {
+            return 
+        }
+
         $actor = ConvertTo-OktaActor $_.actor
         $target = ConvertTo-OktaTarget $_.target
 
