@@ -112,6 +112,10 @@ class Outcome {
         $this.result = $hashtable.result
         $this.reason = $hashtable.reason
     }
+
+    [string] ToString() {
+        return $this.result
+    }
 }
 
 class Transaction {

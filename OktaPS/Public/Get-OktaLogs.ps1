@@ -32,6 +32,11 @@ Function Get-OktaLogs {
         [switch]
         $NoPrompt,
 
+        # Not supported, Disable color output for consoles without ANSI support
+        # [Parameter()]
+        # [switch]
+        # $NoColor,
+
         # Get logs for a specific user, cannot be combined with the Filter parameter
         [Parameter(ParameterSetName="ByUser", ValueFromPipeline)]
         [PSTypeName("OktaUser")]
