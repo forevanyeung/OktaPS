@@ -18,6 +18,11 @@ Function Get-OktaLogs {
         [String]
         $Filter,
 
+        # Filters the log events results by one or more exact keywords
+        [Parameter(ParameterSetName="ByFilter")]
+        [String]
+        $Keyword,
+
         # The order of the returned events that are sorted by published
         [Parameter(ParameterSetName="ByFilter")]
         [Parameter(ParameterSetName="ByUser")]
@@ -58,8 +63,8 @@ Function Get-OktaLogs {
         since = $Since.ToString("o")
         until = $Until.ToString("o")
         filter = $Filter
-        q = ""
-        sortOrder = ""
+        q = $Keyword
+        sortOrder = $Sort
         limit = $Limit
     }
 
