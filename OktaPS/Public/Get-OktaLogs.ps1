@@ -1,3 +1,4 @@
+# bounded requests
 Function Get-OktaLogs {
     [CmdletBinding(DefaultParameterSetName="ByFilter")]
     param (
@@ -74,36 +75,61 @@ Function Get-OktaLogs {
     }
 
     $next = $true
+    $allnext = $false
 
-    While($next -eq $true) {
+    While($next -eq $true -or $allnext -eq $true) {
         $next = $false
 
         $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/logs" -Query $query -PassThru -NoPagination
 
-        ConvertTo-OktaLogEvent -LogEvent $($response.Content | ConvertFrom-JSON)
+        # split the output to console and to variable
+        ConvertTo-OktaLogEvent -LogEvent $($response.Content | ConvertFrom-JSON) | Tee-Object -variable logEvent | Out-Default
+        $logEvent
 
+        # ConvertTo-OktaLogEvent -LogEvent $($response.Content | ConvertFrom-JSON)
+
+        # don't prompt if there are no more pages
+        If(-not $response.RelationLink.ContainsKey('next')) {
+            $next = $false
+            Continue
+        }
+
+        # don't prompt if all pages are requested
+        If($allnext -eq $true) {
+            $uri = [uri]$response.RelationLink["next"]
+            $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
+            $query["after"] = $resQuery["after"]
+
+            Continue
+        }
+
+        # ask the user if they want to continue
+        $nextPageInput = Read-Host "[Y] Next page [A] All pages [N] No more pages"
         
-        # $nextPageInput = Read-Host "[Y] Next page [A] All pages [N] No more pages"
-        
-        # switch($nextPageInput) {
-        #     "Y" {
-        #         $response.Headers["Link"] -match '<(.*?)>; rel="next"' | Out-Null
-        #         $next = $true
-        #         $query["after"] = $response.Data[-1].published
-        #     }
+        switch($nextPageInput) {
+            "Y" {
+                $uri = [uri]$response.RelationLink["next"]
+                $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
+                $query["after"] = $resQuery["after"]
 
-        #     "A" {
-        #         $next = $true
-        #         $query["after"] = $response.Data[-1].published
-        #     }
+                $next = $true
+            }
 
-        #     "N" {
-        #         $next = $false
-        #     }
+            "A" {
+                $uri = [uri]$response.RelationLink["next"]
+                $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
+                $query["after"] = $resQuery["after"]
 
-        #     default {
-        #         $next = $false
-        #     }
-        # }
+                $allnext = $true
+            }
+
+            "N" {
+                $next = $false
+            }
+
+            default {
+                $next = $false
+            }
+        }
     }
 }
