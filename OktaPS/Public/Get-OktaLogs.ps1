@@ -104,10 +104,11 @@ Function Get-OktaLogs {
         }
 
         # ask the user if they want to continue
-        $nextPageInput = Read-Host "[Y] Next page [A] All pages [N] No more pages"
-        
+        $choices  = 'Next &page', '&All pages', '&No more pages'
+        $nextPageInput = $Host.UI.PromptForChoice($null, $null, $choices, 0)
         switch($nextPageInput) {
-            "Y" {
+            # Next page
+            0 {
                 $uri = [uri]$response.RelationLink["next"]
                 $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
                 $query["after"] = $resQuery["after"]
@@ -115,7 +116,8 @@ Function Get-OktaLogs {
                 $next = $true
             }
 
-            "A" {
+            # All pages
+            1 {
                 $uri = [uri]$response.RelationLink["next"]
                 $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
                 $query["after"] = $resQuery["after"]
@@ -123,7 +125,8 @@ Function Get-OktaLogs {
                 $allnext = $true
             }
 
-            "N" {
+            # No more pages
+            2 {
                 $next = $false
             }
 
