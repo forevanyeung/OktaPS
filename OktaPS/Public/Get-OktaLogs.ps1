@@ -1,5 +1,25 @@
-# bounded requests
 Function Get-OktaLogs {
+    <#
+    .SYNOPSIS
+        Fetches a list of ordered log events from your Okta organization's system log
+    .DESCRIPTION
+        The Okta System Log records system events that are related to your organization in order to provide an audit 
+        trail that can be used to understand platform activity and to diagnose problems.
+    .NOTES
+        Information or caveats about the function e.g. 'This function is not supported in Linux'
+    .LINK
+        https://developer.okta.com/docs/reference/api/system-log
+    .EXAMPLE
+        Get-OktaLogs -Limit 15
+        Explanation of the function or its result. You can include multiple examples with additional .EXAMPLE lines
+    .EXAMPLE
+        $logs = Get-OktaLogs -NoPrompt
+        Use -NoPrompt when assigning the output of Get-OktaLogs to a variable
+    .EXAMPLE
+        Get-OktaUser anna.unstoppable | Get-OktaLogs
+        Get logs for a specific user
+    #>
+
     [CmdletBinding(DefaultParameterSetName="ByFilter")]
     param (
         # Filters the lower time bound of the log events published property for bounded queries or persistence time for polling queries
