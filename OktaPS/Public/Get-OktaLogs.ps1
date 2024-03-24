@@ -26,7 +26,7 @@ Function Get-OktaLogs {
         [Parameter(ParameterSetName="ByFilter")]
         [Parameter(ParameterSetName="ByUser")]
         [datetime]
-        $Since = (Get-Date).AddDays(-7),
+        $Since = (Get-Date).AddMinutes(-15),
 
         # Filters the upper time bound of the log events published property for bounded queries or persistence time for polling queries
         [Parameter(ParameterSetName="ByFilter")]
@@ -57,12 +57,6 @@ Function Get-OktaLogs {
         [int]
         $Limit = 1000,
 
-        # Return all pages of results without any prompts
-        [Parameter(ParameterSetName="ByFilter")]
-        [Parameter(ParameterSetName="ByUser")]
-        [switch]
-        $NoPrompt,
-
         # Not supported, Disable color output for consoles without ANSI support
         # [Parameter()]
         # [switch]
@@ -89,70 +83,6 @@ Function Get-OktaLogs {
         limit = $Limit
     }
 
-    If($NoPrompt) {
-        $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/logs" -Query $query
-        Return ConvertTo-OktaLogEvent -LogEvent $response
-    }
-
-    $next = $true
-    $allnext = $false
-
-    While($next -eq $true -or $allnext -eq $true) {
-        $next = $false
-
-        $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/logs" -Query $query -PassThru -NoPagination
-
-        # split the output to console and to variable
-        ConvertTo-OktaLogEvent -LogEvent $($response.Content | ConvertFrom-JSON) | Tee-Object -variable logEvent | Out-Default
-        $logEvent
-
-        # ConvertTo-OktaLogEvent -LogEvent $($response.Content | ConvertFrom-JSON)
-
-        # don't prompt if there are no more pages
-        If(-not $response.RelationLink.ContainsKey('next')) {
-            $next = $false
-            Continue
-        }
-
-        # don't prompt if all pages are requested
-        If($allnext -eq $true) {
-            $uri = [uri]$response.RelationLink["next"]
-            $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
-            $query["after"] = $resQuery["after"]
-
-            Continue
-        }
-
-        # ask the user if they want to continue
-        $choices  = 'Next &page', '&All pages', '&No more pages'
-        $nextPageInput = $Host.UI.PromptForChoice($null, $null, $choices, 0)
-        switch($nextPageInput) {
-            # Next page
-            0 {
-                $uri = [uri]$response.RelationLink["next"]
-                $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
-                $query["after"] = $resQuery["after"]
-
-                $next = $true
-            }
-
-            # All pages
-            1 {
-                $uri = [uri]$response.RelationLink["next"]
-                $resQuery = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
-                $query["after"] = $resQuery["after"]
-
-                $allnext = $true
-            }
-
-            # No more pages
-            2 {
-                $next = $false
-            }
-
-            default {
-                $next = $false
-            }
-        }
-    }
+    $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/logs" -Query $query
+    Return ConvertTo-OktaLogEvent -LogEvent $response
 }
