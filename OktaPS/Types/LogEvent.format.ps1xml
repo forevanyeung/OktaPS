@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>LogEventTable</Name>
+            <ViewSelectedBy>
+                <TypeName>LogEvent</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>Published</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Outcome</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>EventType</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>DisplayMessage</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Actor</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Target</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $color = switch ($_.outcome.result) {
+                                        "FAILURE" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        "DENY" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        default { "{0}" }
+                                    }
+                                    $color -f $_.published
+                                </ScriptBlock>
+                                <!-- <PropertyName>published</PropertyName> -->
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $color = switch ($_.outcome.result) {
+                                        "FAILURE" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        "DENY" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        default { "{0}" }
+                                    }
+                                    $color -f $_.outcome
+                                </ScriptBlock>
+                                <!-- <PropertyName>outcome</PropertyName> -->
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $color = switch ($_.outcome.result) {
+                                        "FAILURE" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        "DENY" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        default { "{0}" }
+                                    }
+                                    $color -f $_.eventType
+                                </ScriptBlock>
+                                <!-- <PropertyName>eventType</PropertyName> -->
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $color = switch ($_.outcome.result) {
+                                        "FAILURE" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        "DENY" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        default { "{0}" }
+                                    }
+                                    $color -f $_.displayMessage
+                                </ScriptBlock>
+                                <!-- <PropertyName>displayMessage</PropertyName> -->
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $color = switch ($_.outcome.result) {
+                                        "FAILURE" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        "DENY" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        default { "{0}" }
+                                    }
+                                    $color -f $_.actor
+                                </ScriptBlock>
+                                <!-- <PropertyName>actor</PropertyName> -->
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $color = switch ($_.outcome.result) {
+                                        "FAILURE" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        "DENY" { "$($PSStyle.Formatting.Error){0}$($PSStyle.Reset)" }
+                                        default { "{0}" }
+                                    }
+                                    $color -f $_.target
+                                </ScriptBlock>
+                                <!-- <PropertyName>target</PropertyName> -->
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>

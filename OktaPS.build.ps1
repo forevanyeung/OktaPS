@@ -129,7 +129,7 @@ task AssembleTypes {
 
     $types = Join-Path $sourceFolder "Types"
     Write-Host "     Assembling type XML data"
-    Get-ChildItem $types -Filter "*.ps1xml" | ForEach-Object {
+    Get-ChildItem $types -Filter "*.type.ps1xml" | ForEach-Object {
         $type = [System.Xml.XmlDocument](Get-Content $_)
         $type.Types.Type | ForEach-Object {
             Write-Host "          $($_.Name)"
@@ -144,6 +144,39 @@ task AssembleTypes {
 
     Write-Host -NoNewLine "     Writing TypesToProcess to module manifest"
     Update-ModuleManifest -Path $outputManifestPath -TypesToProcess ($config.Module + ".Types.ps1xml")
+    Write-Host -ForegroundColor Green "...Complete!"
+}
+
+task AssembleFormat {
+    $formatDoc = [System.Xml.XmlDocument]::new()
+    $xmlDeclaration = $formatDoc.CreateXmlDeclaration("1.0", "utf-8", $null)
+    [void] $formatDoc.InsertBefore($xmlDeclaration, $formatDoc.DocumentElement)
+
+    $xmlRoot = $formatDoc.CreateElement("Configuration")
+    [void] $formatDoc.AppendChild($xmlRoot)
+
+    $viewDefinitions = $formatDoc.CreateElement("ViewDefinitions")
+
+    $typeFolder = Join-Path $sourceFolder "Types"
+    Write-Host  "     Format Files: $typeFolder"
+    Get-ChildItem -Path $typeFolder -Filter "*.format.ps1xml" | ForEach-Object {
+        $format = [System.Xml.XmlDocument](Get-Content $_)
+        $format.Configuration.ViewDefinitions.View | ForEach-Object {
+            Write-Host "          $($_.Name)"
+            $import = $formatDoc.ImportNode($_, $true)
+            [void] $viewDefinitions.AppendChild($import);
+        }
+    }
+
+    [void] $xmlRoot.AppendChild($viewDefinitions)
+
+    Write-Host -NoNewLine "     Assembling format XML data"
+    $formatPath = Join-Path $outputFolder ($config.Module + ".Format.ps1xml")
+    $formatDoc.Save($formatPath)
+    Write-Host -ForegroundColor Green "     ...Complete!"
+
+    Write-Host -NoNewLine "     Writing FormatsToProcess to module manifest"
+    Update-ModuleManifest -Path $outputManifestPath -FormatsToProcess ($config.Module + ".Format.ps1xml")
     Write-Host -ForegroundColor Green "...Complete!"
 }
 
@@ -241,6 +274,7 @@ task . CleanOutput,
        CopyModuleManifest, 
        AssembleModule, 
        AssembleTypes, 
+       AssembleFormat,
        DownloadDependencies, 
        BumpBuildNumber,
        UpdateModuleManifest
