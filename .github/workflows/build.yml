@@ -10,10 +10,7 @@ on:
 jobs:
   build:
     name: Build module
-    runs-on:
-      - self-hosted
-      - commercial
-      - builder
+    runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/dotnet/sdk:latest
     steps:
@@ -47,6 +44,6 @@ jobs:
           name: release
           path: release
 
-      - name: Publish to Nexus
+      - name: Publish to PSGallery
         shell: pwsh
-        run: Invoke-Build Publish -NugetServer ${{ secrets.NEXUS_URL }} -NugetApiKey ${{ secrets.NEXUS_APIKEY }}
+        run: Invoke-Build Publish -NugetServer "https://www.powershellgallery.com/api/v2/package/" -NugetApiKey ${{ secrets.PSGALLERY_API }}
