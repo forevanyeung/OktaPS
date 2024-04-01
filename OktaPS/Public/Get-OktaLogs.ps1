@@ -40,7 +40,7 @@ Function Get-OktaLogs {
         $Filter,
 
         # Filters the log events results by one or more exact keywords
-        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName="ByFilter", ValueFromPipeline)]
         [String]
         $Keyword,
 
@@ -64,13 +64,13 @@ Function Get-OktaLogs {
 
         # Get logs for a specific user, cannot be combined with the Filter parameter
         [Parameter(ParameterSetName="ByUser", ValueFromPipeline)]
-        [PSTypeName("OktaUser")]
-        $OktaUser
+        [OktaUser]
+        $User
     )
 
     Switch($PSCmdlet.ParameterSetName) {
         "ByUser" {
-            $Filter = "actor.id eq ""$($OktaUser.id)"" or target.id eq ""$($OktaUser.id)"""
+            $Filter = "actor.id eq ""$($User.id)"" or target.id eq ""$($User.id)"""
         }
     }
     
