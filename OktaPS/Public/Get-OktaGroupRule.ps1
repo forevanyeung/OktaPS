@@ -1,25 +1,49 @@
 Function Get-OktaGroupRule {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="BySearch")]
     param (
-        # Id of the rule to retrieve, or keyword to search rules for
-        [Parameter(Mandatory)]
+        # Id of a group rule
+        [Parameter(ParameterSetName="ById", Mandatory)]
         [String]
-        $Rule
+        $Id,
+
+        # Specifies the keyword to search rules for, leave empty to list all rules
+        [Parameter(ParameterSetName="BySearch")]
+        [String]
+        $Search,
+
+        # Expand group ids to names 
+        [Parameter(ParameterSetName="BySearch")]
+        [Parameter(ParameterSetName="ById")]
+        [Switch]
+        $Expand, 
+
+        # Specifies the number of rule results in a page
+        [Parameter(ParameterSetName="BySearch")]
+        [int]
+        $Limit = 200
     )
 
-    If($Rule -like "0pr*") {
-        $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules/$Rule" -ErrorAction SilentlyContinue
+    switch($PSCmdlet.ParameterSetName) {
+        "ById" {
+            If($Expand -eq $true) {
+                $query = @{}
+                $query["expand"] = "groupIdToGroupNameMap"
+            }
+
+            $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules/$Rule" -ErrorAction SilentlyContinue
+        }
+
+        "BySearch" {
+            $query = @{}
+            $query["search"] = $Rule
+            $query["limit"] = $Limit
+            If($Expand) {
+                $query["expand"] = "groupIdToGroupNameMap"
+            }
+
+            $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules" -Query $query -ErrorAction SilentlyContinue
+        }
     }
 
-    # If the rule is not found, or the rule is a keyword, search for the rule
-    If($response.errorCode -or $Rule -notlike "0pr*") {
-        $query = @{}
-        $query["search"] = $Rule
-        $query["limit"] = 200
-        $query["expand"] = "groupIdToGroupNameMap"
-
-        $rule = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules" -Query $query -ErrorAction SilentlyContinue
-    }
-
-    Return $rule
+    Return $response
 }
