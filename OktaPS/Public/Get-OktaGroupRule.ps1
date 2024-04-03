@@ -25,12 +25,12 @@ Function Get-OktaGroupRule {
 
     switch($PSCmdlet.ParameterSetName) {
         "ById" {
-            If($Expand -eq $true) {
+            If($Expand) {
                 $query = @{}
                 $query["expand"] = "groupIdToGroupNameMap"
             }
 
-            $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules/$Id" -ErrorAction SilentlyContinue
+            $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules/$Id" -Query $query -ErrorAction SilentlyContinue
         }
 
         "BySearch" {
