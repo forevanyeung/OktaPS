@@ -45,5 +45,7 @@ Function Get-OktaGroupRule {
         }
     }
 
-    Return $response
+    $rule = ConvertTo-OktaGroupRule $response
+
+    Return $rule
 }

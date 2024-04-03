@@ -1,24 +1,7 @@
 # Powershell module for development. Exports public and private functions. 
 # Production module will overwrite this file. 
 
-# Get public and private function definition files
 $ModulePath = $PSScriptRoot -eq "" ? $($pseditor.geteditorcontext().currentfile.path | split-path -parent) : $PSScriptRoot
-$Public = @( Get-ChildItem -Path $ModulePath\Public\*.ps1 -ErrorAction SilentlyContinue )
-$Private = @( Get-ChildItem -Path $ModulePath\Private\*.ps1 -ErrorAction SilentlyContinue )
-
-Foreach($fn in @($Public + $Private)) {
-    Try {
-        Write-Host "Importing function: $($fn.FullName)"
-        
-        # Dot source the functions
-        . $fn.FullName
-
-        # export function
-        Export-ModuleMember -Function $fn.BaseName -ErrorAction SilentlyContinue
-    } Catch {
-        Write-Error -Message "Failed to import function $($fn.FullName): $_"
-    }   
-}
 
 # Add Types
 $ModuleTypes = @( Get-ChildItem -Path $ModulePath\Types\*.type.ps1xml -ErrorAction SilentlyContinue )
@@ -50,4 +33,22 @@ Foreach($mod in $ModuleImports) {
     } Catch {
         Write-Error "Failed to import module $($mod.FullName): $_"
     }
+}
+
+# Get public and private function definition files
+$Public = @( Get-ChildItem -Path $ModulePath\Public\*.ps1 -ErrorAction SilentlyContinue )
+$Private = @( Get-ChildItem -Path $ModulePath\Private\*.ps1 -ErrorAction SilentlyContinue )
+
+Foreach($fn in @($Public + $Private)) {
+    Try {
+        Write-Host "Importing function: $($fn.FullName)"
+        
+        # Dot source the functions
+        . $fn.FullName
+
+        # export function
+        Export-ModuleMember -Function $fn.BaseName -ErrorAction SilentlyContinue
+    } Catch {
+        Write-Error -Message "Failed to import function $($fn.FullName): $_"
+    }   
 }
