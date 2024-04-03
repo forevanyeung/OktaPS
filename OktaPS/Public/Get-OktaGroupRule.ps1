@@ -30,7 +30,7 @@ Function Get-OktaGroupRule {
                 $query["expand"] = "groupIdToGroupNameMap"
             }
 
-            $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules/$Rule" -ErrorAction SilentlyContinue
+            $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules/$Id" -ErrorAction SilentlyContinue
         }
 
         "BySearch" {
