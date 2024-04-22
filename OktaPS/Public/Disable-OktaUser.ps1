@@ -1,8 +1,8 @@
 Function Disable-OktaUser {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         # id, login, or login shortname (as long as it is unambiguous) of user
-        [Parameter()]
+        [Parameter(ValueFromPipeline, Position=0)]
         [OktaUser]
         $User,
 
@@ -22,16 +22,28 @@ Function Disable-OktaUser {
         # $Confirm = $true
     )
 
-    $headers = @{}
-    $query = @{}
-
-    If($Async) {
-        $headers['Prefer'] = "respond-async"
+    Begin {   
+        $headers = @{}
+        $query = @{}
+            
+        If($Async) {
+            $headers['Prefer'] = "respond-async"
+        }
+        
+        If($SendEmail) {
+            $query['sendEmail'] = $true
+        }
+    }
+    
+    Process {
+        Foreach($u in $User) {
+            if ($PSCmdlet.ShouldProcess($u.login)) {
+                Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/users/$($u.id)/lifecycle/deactivate" -Headers $headers -Query $query
+            }
+        }
     }
 
-    If($SendEmail) {
-        $query['sendEmail'] = $true
-    }
+    End {
 
-    Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/users/$($User.id)/lifecycle/deactivate" -Headers $headers -Query $query
+    }
 }
