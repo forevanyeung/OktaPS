@@ -11,7 +11,7 @@ Function Get-OktaGroup {
         # Specifies a specific type of group to search for. If no Type is specified, the default is to search for all 
         # types. Does not apply when searching by ID.
         [Parameter()]
-        [ValidateSet("OKTA_GROUP","APP_GROUP")]
+        [ValidateSet("OKTA_GROUP","APP_GROUP","BUILT_IN")]
         [String]
         $Type
     )
