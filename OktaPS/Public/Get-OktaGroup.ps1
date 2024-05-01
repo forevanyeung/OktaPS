@@ -13,10 +13,18 @@ Function Get-OktaGroup {
         [Parameter()]
         [ValidateSet("OKTA_GROUP","APP_GROUP","BUILT_IN")]
         [String]
-        $Type
+        $Type, 
+
+        # Specifies the number of Group results in a page
+        [Parameter(ParameterSetName="AllGroups")]
+        [Parameter(ParameterSetName="GetGroup")]
+        [Int]
+        $Limit = 10000
     )
 
     $query = @{}
+    $query["limit"] = $Limit
+
     If($Type) {
         $query["filter"] = "type eq `"$Type`""
     } 
