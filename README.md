@@ -1,5 +1,5 @@
-![stable version](https://img.shields.io/badge/development-0.1.0-orange)
-![powershell version support](https://img.shields.io/badge/powershell-%3E%3D%207.0.0-blue)
+![PowerShell Gallery Version](https://img.shields.io/powershellgallery/v/OktaPS)
+![powershell version support](https://img.shields.io/badge/powershell-%3E%3D%207.2.7-blue)
 ![platform support](https://img.shields.io/badge/platform-windows%20%7C%20macos-lightgrey)
 
 # OktaPS
