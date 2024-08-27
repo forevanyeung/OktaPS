@@ -76,6 +76,12 @@ task CopyModuleManifest {
 
 # Synopsis: Assemble the module for release
 task AssembleModule {
+    Write-Host "     Creating combined module file"
+
+    Write-Host -NoNewline "     Adding check for updates to module file"
+    $CombineFiles = (Get-Content -Path "$buildFolder\Check-Updates.ps1" -Raw) + "`r`n`r`n"
+    Write-Host -ForegroundColor Green '...Complete!'
+
     $types = Join-Path $sourceFolder "Types"
     $classes = Get-ChildItem -Path $types -Filter "*.class.ps1" 
     Write-Host ""
