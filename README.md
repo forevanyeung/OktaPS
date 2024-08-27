@@ -40,6 +40,12 @@ You can disable the warning prompt with the `Set-OktaAdminAPIWarning -Disable` c
 ### PowerShell Compatibility
 For cross-platform support, only PowerShell 7.0+ is supported.
 
+### Disable checking for updates
+By default, when you import the module it will automatically check if there is a new version available. To disable this check, set the following environment variable before importing the OktaPS module.
+```
+OKTAPS_CHECK_UPDATES="false"
+```
+
 ## Credits
 OktaPS uses code written by other authors. Thank 
 
