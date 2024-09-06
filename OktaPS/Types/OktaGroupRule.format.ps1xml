@@ -2,9 +2,9 @@
 <Configuration>
     <ViewDefinitions>
         <View>
-            <Name>GroupRuleTable</Name>
+            <Name>OktaGroupRuleTable</Name>
             <ViewSelectedBy>
-                <TypeName>GroupRule</TypeName>
+                <TypeName>OktaGroupRule</TypeName>
             </ViewSelectedBy>
             <TableControl>
                 <TableHeaders>
