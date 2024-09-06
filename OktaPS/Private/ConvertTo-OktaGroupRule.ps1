@@ -11,7 +11,7 @@ Function ConvertTo-OktaGroupRule {
             return 
         }
 
-        [GroupRule]@{
+        [OktaGroupRule]@{
             actions = $_.actions
             conditions = $_.conditions
             created = $_.created

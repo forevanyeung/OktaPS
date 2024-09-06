@@ -67,7 +67,7 @@ class GroupRuleConditions {
     }
 }
 
-class GroupRule {
+class OktaGroupRule {
     [GroupRuleAction] $actions
     [GroupRuleConditions] $conditions
     [DateTime] $created
@@ -77,7 +77,23 @@ class GroupRule {
     [GroupRuleStatus] $status
     [string] $type
 
-    GroupRule([object]$hashtable) {
+    OktaGroupRule([string]$identity) {
+        If($identity -like "0pr*") {
+            $that = Get-OktaGroupRule -Id $identity -ErrorAction Stop
+        } else {
+            $that = Get-OktaGroupRule -Search $identity -ErrorAction Stop
+        }
+
+        foreach($key in $that.psobject.properties.name) {
+            try {
+                $this.$key = $that.$key
+            } catch {
+                $this | Add-Member -NotePropertyName $key -NotePropertyValue $that.$key
+            }
+        }
+    }
+
+    OktaGroupRule([object]$hashtable) {
         $this.actions = $hashtable.actions
         $this.conditions = $hashtable.conditions
         $this.created = $hashtable.created
