@@ -3,7 +3,6 @@ Function Get-OktaGroupRule {
     param (
         # Specifies the number of rule results in a page
         [Parameter(ParameterSetName="AllGroupRules")]
-        [Parameter(ParameterSetName="GetGroupRules")]
         [Int]
         $Limit = 200,
 
@@ -13,13 +12,13 @@ Function Get-OktaGroupRule {
         $Search,
 
         # The id of the group rule
-        [Parameter(ParameterSetName="GetGroupRules", Mandatory=$true)]
+        [Parameter(ParameterSetName="GetGroupRuleById", Mandatory=$true, Position=0)]
         [String]
         $Id, 
 
         # If specified then displays group names
         [Parameter(ParameterSetName="AllGroupRules")]
-        [Parameter(ParameterSetName="GetGroupRules")]
+        [Parameter(ParameterSetName="GetGroupRuleById")]
         [Switch]
         $ExpandIdGroupNames
     )
@@ -39,15 +38,17 @@ Function Get-OktaGroupRule {
             }
 
             $groupRules = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules" -Query $query
+            If(-not $groupRules) {
+                Throw "Group rule not found: $Search"
+            }
         }
 
-        "GetGroupRules" {
+        "GetGroupRuleById" {
             $groupRules = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/rules/$Id" -Query $query
+            If(-not $groupRules) {
+                Throw "Group rule not found: $Id"
+            }
         }
-    }
-
-    If(-not $groupRules) {
-        Throw "Group not found: $Name"
     }
 
     $groupRulesObject = Foreach($gr in $groupRules) {
