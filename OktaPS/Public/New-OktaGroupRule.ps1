@@ -1,41 +1,37 @@
 Function New-OktaGroupRule {
     [CmdletBinding()]
     param (
+        # Name of the Group rule
         [ValidateLength(1,50)]
         [Parameter(Mandatory)]
         [string]
         $Name,
 
-        # Parameter help description
+        # Defines Okta specific group-rules expression
         [Parameter(Mandatory)]
         [string]
         $Expression,
 
-        # Parameter help description
+        # Array of groupIds to which Users are added
         [Parameter(Mandatory)]
-        [String[]]
+        [OktaGroup[]]
         $Group,
 
-        # Parameter help description
+        # Excluded users when processing rules
+        [Parameter()]
+        [OktaUser[]]
+        $ExcludeUsers,
+
+        # Activates the group rule after creation
         [Parameter()]
         [Switch]
         $Activate
     )
 
-    $newRule = Invoke-OktaRequest -Method "POST" -Endpoint "api/v1/groups/rules" -Body @{
+    $body = @{
         "type" = "group_rule"
         "name" = $Name
         "conditions" = @{
-            # "people": {
-            #     "users": {
-            #         "exclude": [
-            #         "00u22w79JPMEeeuLr0g4"
-            #         ]
-            #     },
-            #     "groups": {
-            #         "exclude": []
-            #     }
-            # },
             "expression" = @{
                 "value" = $Expression.Replace("'","`"") #expression has to be in double-quotes
                 "type" = "urn:okta:expression:1.0"
@@ -48,13 +44,19 @@ Function New-OktaGroupRule {
         }
     }
 
+    If($ExcludeUsers) {
+        $body.conditions.people.exclude = $ExcludeUsers
+    }
+
+    $rule = Invoke-OktaRequest -Method "POST" -Endpoint "api/v1/groups/rules" -Body $Body
+
     If($Activate) {
-        $ruleId = $newRule.Id
-        $activatedRule = Enable-OktaGroupRule -Rule $ruleId
-        # $activatedRule = Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/groups/rules/${ruleId}/lifecycle/activate"
+        Enable-OktaGroupRule -Rule $rule
+
+        $activatedRule = Get-OktaGroupRule -Id $activatedRule.id
 
         Return $activatedRule
-    } else {
-        Return $newRule
     }
+
+    Return $rule
 }
