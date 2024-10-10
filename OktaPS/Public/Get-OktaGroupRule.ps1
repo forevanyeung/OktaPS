@@ -1,3 +1,24 @@
+<#
+.SYNOPSIS
+    Retrieves a group rule.
+.DESCRIPTION
+    Lists all group rules for your organization, or group rules that match by keyword or id.
+.OUTPUTS
+    OktaGroupRule
+.LINK
+    https://developer.okta.com/docs/api/openapi/okta-management/management/tag/GroupRule/#tag/GroupRule/operation/listGroupRules
+.LINK 
+    https://developer.okta.com/docs/api/openapi/okta-management/management/tag/GroupRule/#tag/GroupRule/operation/getGroupRule
+.EXAMPLE
+    Get-OktaGroupRule
+    Lists all group rules.
+.EXAMPLE
+    Get-OktaGroupRule -Id "0pr3f7zMZZHPgUoWO0g4"
+    Retrieves a specific group rule by id.
+.EXAMPLE
+    Get-OktaGroupRule -Search "Engineering"
+    Lists group rules that match the search keyword.
+#>
 Function Get-OktaGroupRule {
     [CmdletBinding(DefaultParameterSetName='AllGroupRules')]
     param (

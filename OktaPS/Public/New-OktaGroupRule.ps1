@@ -1,3 +1,19 @@
+<#
+.SYNOPSIS
+    Creates a group rule.
+.DESCRIPTION
+    Creates a group rule to dynamically add Users to the specified Group if they match the condition.
+.OUTPUTS
+    OktaGroupRule
+.LINK
+    https://developer.okta.com/docs/api/openapi/okta-management/management/tag/GroupRule/#tag/GroupRule/operation/createGroupRule
+.EXAMPLE
+    New-OktaGroupRule -Name "Engineering group rule" -Expression "user.role==`"Engineer`""" -Group "Engineering"
+    Creates a group rule that adds users to the Engineering group if their role is Engineer.
+.EXAMPLE
+    New-OktaGroupRule -Name "Engineering group rule" -Expression "user.role==`"Engineer`""" -Group "Engineering" -Activate
+    Creates a group rule that adds users to the Engineering group if their role is Engineer. The rule is activated after creation.
+#>
 Function New-OktaGroupRule {
     [CmdletBinding()]
     param (
@@ -7,12 +23,12 @@ Function New-OktaGroupRule {
         [string]
         $Name,
 
-        # Defines Okta specific group-rules expression
+        # Defines Okta specific group-rules expression, single-quotes are replaced with double-quotes
         [Parameter(Mandatory)]
         [string]
         $Expression,
 
-        # Array of groupIds to which Users are added
+        # List of group Ids or objects to which users are added if they match the condition
         [Parameter(Mandatory)]
         [OktaGroup[]]
         $Group,
