@@ -1,4 +1,9 @@
 #Requires -Modules 'InvokeBuild'
+[Diagnostics.CodeAnalysis.SuppressMessage("PSUseDeclaredVarsMoreThanAssignments", 'environment')]
+[Diagnostics.CodeAnalysis.SuppressMessage("PSUseDeclaredVarsMoreThanAssignments", 'sourceManifestPath')]
+[Diagnostics.CodeAnalysis.SuppressMessage("PSUseDeclaredVarsMoreThanAssignments", 'outputManifestPath')]
+[Diagnostics.CodeAnalysis.SuppressMessage("PSUseDeclaredVarsMoreThanAssignments", 'pwshModuleFolder')]
+[Diagnostics.CodeAnalysis.SuppressMessage("PSUseDeclaredVarsMoreThanAssignments", 'docsReferenceFolder')]
 
 [CmdletBinding(DefaultParameterSetName="Build")]
 param (
