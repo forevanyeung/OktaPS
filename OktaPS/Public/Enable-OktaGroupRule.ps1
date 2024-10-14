@@ -20,7 +20,7 @@ Function Enable-OktaGroupRule {
     [CmdletBinding()]
     param (
         # The id or object of a group rule
-        [Parameter(Mandatory=$true, ValueFromPipeline)]
+        [Parameter(Mandatory=$true, ValueFromPipeline, Position=0)]
         [OktaGroupRule]
         $Rule
     )
