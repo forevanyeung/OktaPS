@@ -29,7 +29,7 @@ Enter-Build {
     $outputFolder = Join-Path $BuildRoot $config.Output                         # /release/
     $sourceManifestPath = Join-Path $sourceFolder ($config.Module + ".psd1")    # /OktaPS/OktaPS.psd1
     $outputManifestPath = Join-Path $outputFolder ($config.Module + ".psd1")    # /release/OktaPS.psd1
-    $pwshModuleFolder = Join-Path $outputFolder "pwsh_modules"                  # /release/pwsh_modules/
+    $pwshModuleFolder = Join-Path $outputFolder "pwsh_modules/"                 # /release/pwsh_modules/
     $docsFolder = Join-Path $BuildRoot "Docs"                                   # /Docs/
     $docsReferenceFolder = Join-Path $docsFolder "reference"                    # /Docs/reference/
 
@@ -182,25 +182,39 @@ task AssembleFormat {
 
 task DownloadDependencies {
     $nestedModules = @()
-    $config.Dependencies.GetEnumerator() | ForEach-Object {
-        $githubUser, $githubRepoRef = $_.Value.Split("/", 2)
-        $githubRepoData, $githubRef = $githubRepoRef.Split("#", 2)
-        $githubRepo, $githubSubFolder = $githubRepoData.Split("/", 2)
+
+    if ($environment -eq 'dev') {
+        Write-Host "Environment is dev. Using cached dependencies from OktaPS/pwsh_modules."
+        $cachedDependencies = Join-Path $sourceFolder 'pwsh_modules'
+
+        Get-ChildItem -Path $cachedDependencies | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $pwshModuleFolder -Container
+        }
+
+        Write-Host -ForegroundColor Green "Cached dependencies copied to release directory."
+    } else {
+        $config.Dependencies.GetEnumerator() | ForEach-Object {
+            $githubUser, $githubRepoRef = $_.Value.Split("/", 2)
+            $githubRepoData, $githubRef = $githubRepoRef.Split("#", 2)
+            $githubRepo, $githubSubFolder = $githubRepoData.Split("/", 2)
 
 
-        $githubUrl = "https://api.github.com/repos/${githubUser}/${githubRepo}/zipball/${githubRef}"
-        Write-Host "     Downloading dependency: $githubUrl"
-        $depDownload = Save-File -Uri $githubUrl
-        Write-Host "          Extracting archive"
-        Expand-Archive -Path $depDownload -DestinationPath $pwshModuleFolder
-        Remove-Item -Path $depDownload -Force
+            $githubUrl = "https://api.github.com/repos/${githubUser}/${githubRepo}/zipball/${githubRef}"
+            Write-Host "     Downloading dependency: $githubUrl"
+            $depDownload = Save-File -Uri $githubUrl
+            Write-Host "          Extracting archive"
+            Expand-Archive -Path $depDownload -DestinationPath $pwshModuleFolder
+            Remove-Item -Path $depDownload -Force
 
-        $depArchive = (Join-Path $pwshModuleFolder (Split-Path -Path $depDownload -LeafBase))
-        $module = $_.Key
-        Rename-Item -Path $depArchive -NewName $module
-        
-        # find psm1
-        $depModuleLocation = Join-Path $pwshModuleFolder $module $githubSubFolder
+            $depArchive = (Join-Path $pwshModuleFolder (Split-Path -Path $depDownload -LeafBase))
+            $module = $_.Key
+            Rename-Item -Path $depArchive -NewName $module
+        }
+    }
+
+    # find psm1
+    Get-ChildItem -Path $pwshModuleFolder | ForEach-Object {
+        $depModuleLocation = $_.FullName
         Write-Host "          Looking for module file in $depModuleLocation"
         $depModuleFile = Get-ChildItem -Path $depModuleLocation -Filter "*.psm1"
         If($depModuleFile.Count -eq 1) {
@@ -211,7 +225,7 @@ task DownloadDependencies {
         }
     }
 
-    If($environment -eq "Build") {
+    If($environment -ne "Install" -and $nestedModules.Count -gt 0) {
         Write-Host -NoNewLine "     Adding nested modules to manifest" 
         Update-ModuleManifest -Path $outputManifestPath -NestedModules $nestedModules
         Write-Host -ForegroundColor Green "...Complete!"
@@ -270,14 +284,19 @@ task PublishInternalNexus {
     Write-Host -ForegroundColor Green "...Complete!"
 }
 
-task . CleanOutput, 
-       CopyModuleManifest, 
-       AssembleModule, 
-       AssembleTypes, 
-       AssembleFormat,
-       DownloadDependencies, 
-       BumpBuildNumber,
-       UpdateModuleManifest
+task Build CleanOutput, 
+           CopyModuleManifest, 
+           AssembleModule, 
+           AssembleTypes, 
+           AssembleFormat,
+           DownloadDependencies, 
+           BumpBuildNumber,
+           UpdateModuleManifest
+
+task . {
+        $Script:environment = "Dev"
+    },
+    Build
 
 task Install {
         $Script:environment = "Install"
