@@ -12,6 +12,12 @@
 # 4a. -save session to config-
 # 5.  if -save param is set, overwrite config with new
 
+# Register the argument completer
+Register-ArgumentCompleter -CommandName 'Connect-Okta' -ParameterName 'Config' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    OktaConfigPathArgumentCompleter -commandName $commandName -parameterName $parameterName -wordToComplete $wordToComplete -commandAst $commandAst -fakeBoundParameter $fakeBoundParameter
+}
+
 Function Connect-Okta {
     [CmdletBinding(DefaultParameterSetName='SavedConfig')]
     param (
@@ -48,7 +54,7 @@ Function Connect-Okta {
         $SavePath = (Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta\okta.yaml"),
 
         # Path to .yaml config file
-        [Parameter(ParameterSetName = 'SavedConfig')]
+        [Parameter(ParameterSetName = 'SavedConfig', Position=0)]
         [ArgumentCompleter({ OktaConfigPathArgumentCompleter @args })]
         [String]
         $Config
