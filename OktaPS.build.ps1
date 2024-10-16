@@ -184,11 +184,15 @@ task DownloadDependencies {
     $nestedModules = @()
 
     if ($environment -eq 'dev') {
-        Write-Host "Environment is dev. Using cached dependencies from OktaPS/pwsh_modules."
         $cachedDependencies = Join-Path $sourceFolder 'pwsh_modules'
+        Write-Host "Environment is dev. Using cached dependencies from $cachedDependencies."
 
         Get-ChildItem -Path $cachedDependencies | ForEach-Object {
-            Copy-Item -Path $_.FullName -Destination $pwshModuleFolder -Container
+            Write-Host "Creating directory $($_.Name)"
+            $null = New-Item -ItemType Directory -Path $pwshModuleFolder -Name $($_.Name)
+
+            Copy-Item -Path $_.FullName -Destination $pwshModuleFolder -Recurse -Force
+            Write-Host "Copied $($_.BaseName)"
         }
 
         Write-Host -ForegroundColor Green "Cached dependencies copied to release directory."
@@ -197,7 +201,6 @@ task DownloadDependencies {
             $githubUser, $githubRepoRef = $_.Value.Split("/", 2)
             $githubRepoData, $githubRef = $githubRepoRef.Split("#", 2)
             $githubRepo, $githubSubFolder = $githubRepoData.Split("/", 2)
-
 
             $githubUrl = "https://api.github.com/repos/${githubUser}/${githubRepo}/zipball/${githubRef}"
             Write-Host "     Downloading dependency: $githubUrl"
@@ -219,7 +222,7 @@ task DownloadDependencies {
         $depModuleFile = Get-ChildItem -Path $depModuleLocation -Filter "*.psm1"
         If($depModuleFile.Count -eq 1) {
             Write-Host "          Module file: $depModuleFile"
-            $nestedModules += (Join-Path "pwsh_modules" $module $githubSubFolder $depModuleFile.Name)
+            $nestedModules += (Join-Path "pwsh_modules" $_.Name $depModuleFile.Name)
         } else {
             Write-Host "          Found $($depModuleFile.Count) module files, should be equal to 1." -ForegroundColor Yellow
         }
