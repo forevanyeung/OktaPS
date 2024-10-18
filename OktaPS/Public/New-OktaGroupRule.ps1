@@ -71,7 +71,7 @@ Function New-OktaGroupRule {
     If($Activate) {
         Enable-OktaGroupRule -Rule $rule
 
-        $activatedRule = Get-OktaGroupRule -Id $activatedRule.id
+        $activatedRule = Get-OktaGroupRule -Id $rule.id
 
         Return $activatedRule
     }
