@@ -61,7 +61,9 @@ Function New-OktaGroupRule {
     }
 
     If($ExcludeUsers) {
-        $body.conditions.people.exclude = $ExcludeUsers
+        $body.conditions.people = @{}
+        $body.conditions.people.users = @{}
+        $body.conditions.people.users.exclude = $ExcludeUsers
     }
 
     $rule = Invoke-OktaRequest -Method "POST" -Endpoint "api/v1/groups/rules" -Body $Body
