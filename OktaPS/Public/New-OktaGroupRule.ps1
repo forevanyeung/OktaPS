@@ -52,18 +52,24 @@ Function New-OktaGroupRule {
                 "value" = $Expression.Replace("'","`"") #expression has to be in double-quotes
                 "type" = "urn:okta:expression:1.0"
             }
+            "people" = @{
+                "users" = @{
+                    "exclude" = @()
+                }
+                "groups" = @{
+                    "exclude" = @()
+                }
+            }
         }
         "actions" = @{
             "assignUserToGroups" = @{
-                "groupIds" = $Group
+                "groupIds" = @($Group.id)
             }
         }
     }
 
     If($ExcludeUsers) {
-        $body.conditions.people = @{}
-        $body.conditions.people.users = @{}
-        $body.conditions.people.users.exclude = $ExcludeUsers
+        $body.conditions.people.users.exclude = $ExcludeUsers.id
     }
 
     $rule = Invoke-OktaRequest -Method "POST" -Endpoint "api/v1/groups/rules" -Body $Body
@@ -73,8 +79,8 @@ Function New-OktaGroupRule {
 
         $activatedRule = Get-OktaGroupRule -Id $rule.id
 
-        Return $activatedRule
+        Return $(ConvertTo-OktaGroupRule -GroupRule $activatedRule)
     }
 
-    Return $rule
+    Return $(ConvertTo-OktaGroupRule -GroupRule $rule)
 }

@@ -17,8 +17,19 @@ class OktaGroup {
     [GroupType]          $type
     [string[]]           $source
     
-    OktaUser([string]$name) {
-        Get-OktaGroup -Name $name -ErrorAction Stop
+    OktaGroup([string]$name) {
+        $that = Get-OktaGroup -Name $name -ErrorAction Stop
+
+        # $this._embedded = $that._embedded
+        # $this._links = $that._links
+        $this.created = $that.created
+        $this.id = $that.id
+        $this.lastMembershipUpdated = $that.lastMembershipUpdated
+        $this.lastUpdated = $that.lastUpdated
+        $this.objectClass = $that.objectClass
+        $this.profile = $that.profile
+        $this.type = $that.type
+        $this.source = $that.source
     }
 
     OktaGroup([object]$hashtable) {
