@@ -78,7 +78,7 @@ Function Connect-Okta {
         
                 } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
                     $OrgUrl = $yamlConfig.orgUrl
-                    $API = $yamlConfig.Token
+                    $API = $yamlConfig.token
                     $AuthFlow = "SSWS"
         
                 } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
