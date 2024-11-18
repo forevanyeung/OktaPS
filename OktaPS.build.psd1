@@ -2,8 +2,8 @@
     Module = "OktaPS"
     Output = "release"
     Dependencies = @{
-        PowerHTML = "forevanyeung/PowerHTML#fix-formatdata"
-        "powershell-yaml" = "cloudbase/powershell-yaml"
+        "PowerHTML" = "github:forevanyeung/PowerHTML#fix-formatdata"
+        "powershell-yaml" = "0.4.7"
     }
     DevDependencies = @{
         # Pester = ""
