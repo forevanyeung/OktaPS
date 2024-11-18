@@ -183,55 +183,63 @@ task AssembleFormat {
 task DownloadDependencies {
     $nestedModules = @()
 
-    if ($environment -eq 'dev') {
-        $cachedDependencies = Join-Path $sourceFolder 'pwsh_modules'
-        Write-Host "Environment is dev. Using cached dependencies from $cachedDependencies."
+    Write-Host "     Downloading dependencies"
+    $config.Dependencies.GetEnumerator() | ForEach-Object {
+        Write-Host "     $_"
+        $package = $_
 
-        Get-ChildItem -Path $cachedDependencies | ForEach-Object {
-            Write-Host "Creating directory $($_.Name)"
-            $null = New-Item -ItemType Directory -Path $pwshModuleFolder -Name $($_.Name)
+        if ($environment -eq 'dev') {
+            # try and find the folder where the dependencies are cached
+            $cachedDependencies = Join-Path $sourceFolder 'pwsh_modules'
+            # Write-Host "Environment is dev. Using cached dependencies from $cachedDependencies."
 
-            Copy-Item -Path $_.FullName -Destination $pwshModuleFolder -Recurse -Force
-            Write-Host "Copied $($_.BaseName)"
-        }
+            $dep = Join-Path $cachedDependencies $package.key
+            If(Test-Path $dep) {
+                $null = New-Item -ItemType Directory -Path $pwshModuleFolder -Name $package.key
+                Copy-Item -Path $dep -Destination $pwshModuleFolder -Recurse -Force
+                
+                Write-Host "          Copied cached dependency for $($package.key)"
+                Return
+            }
+        } 
 
-        Write-Host -ForegroundColor Green "Cached dependencies copied to release directory."
-    } else {
-        $config.Dependencies.GetEnumerator() | ForEach-Object {
-            $githubUser, $githubRepoRef = $_.Value.Split("/", 2)
-            $githubRepoData, $githubRef = $githubRepoRef.Split("#", 2)
-            $githubRepo, $githubSubFolder = $githubRepoData.Split("/", 2)
+        # determine if dependency is a github repo or a psgallery module
+        $split = $_.Value.Split(":")
+        $source = $null -eq $split[1] ? "nuget" : $split[0]
 
-            $githubUrl = "https://api.github.com/repos/${githubUser}/${githubRepo}/zipball/${githubRef}"
-            Write-Host "     Downloading dependency: $githubUrl"
-            $depDownload = Save-File -Uri $githubUrl
-            Write-Host "          Extracting archive"
-            Expand-Archive -Path $depDownload -DestinationPath $pwshModuleFolder
-            Remove-Item -Path $depDownload -Force
+        Write-Host "     Source: $source"
 
-            $depArchive = (Join-Path $pwshModuleFolder (Split-Path -Path $depDownload -LeafBase))
-            $module = $_.Key
-            Rename-Item -Path $depArchive -NewName $module
+        switch ($source) {
+            "nuget" { 
+                Save-Module -Name $package.key -RequiredVersion $package.value -Path $pwshModuleFolder -Force
+            }
+
+            "github" {
+                Save-Github -Name $package.key -Repository $split[1] -Destination $pwshModuleFolder
+            }
+
+            "http" {
+                Write-Build Yellow "     Warning: Not implemented"
+            }
+
+            "https" {
+                Write-Build Yellow "     Warning: Not implemented"
+            }
+
+            Default {
+                Write-Build Yellow "     Error: Unknown source"
+            }
         }
     }
 
     # find psm1
-    Get-ChildItem -Path $pwshModuleFolder | ForEach-Object {
-        $depModuleLocation = $_.FullName
-        Write-Host "          Looking for module file in $depModuleLocation"
-        $depModuleFile = Get-ChildItem -Path $depModuleLocation -Filter "*.psm1"
-        If($depModuleFile.Count -eq 1) {
-            Write-Host "          Module file: $depModuleFile"
-            $nestedModules += (Join-Path "pwsh_modules" $_.Name $depModuleFile.Name)
-        } else {
-            Write-Host "          Found $($depModuleFile.Count) module files, should be equal to 1." -ForegroundColor Yellow
+    If($environment -ne "Install") {
+        $nestedModules = Get-ChildItem -Path $pwshModuleFolder -Filter *.psm1 -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+        If($nestedModules.Count -gt 0) {
+            Write-Host -NoNewLine "     Adding nested modules to manifest" 
+            Update-ModuleManifest -Path $outputManifestPath -NestedModules $nestedModules
+            Write-Host -ForegroundColor Green "...Complete!"
         }
-    }
-
-    If($environment -ne "Install" -and $nestedModules.Count -gt 0) {
-        Write-Host -NoNewLine "     Adding nested modules to manifest" 
-        Update-ModuleManifest -Path $outputManifestPath -NestedModules $nestedModules
-        Write-Host -ForegroundColor Green "...Complete!"
     }
 }
 
