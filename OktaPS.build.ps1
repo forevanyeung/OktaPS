@@ -234,7 +234,9 @@ task DownloadDependencies {
 
     # find psm1
     If($environment -ne "Install") {
-        $nestedModules = Get-ChildItem -Path $pwshModuleFolder -Filter *.psm1 -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+        $nestedModules = Get-ChildItem -Path $pwshModuleFolder -Filter *.psm1 -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            $_.FullName.Substring($outputFolder.Length + 1)
+        }
         If($nestedModules.Count -gt 0) {
             Write-Host -NoNewLine "     Adding nested modules to manifest" 
             Update-ModuleManifest -Path $outputManifestPath -NestedModules $nestedModules
