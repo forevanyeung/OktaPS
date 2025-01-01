@@ -27,7 +27,7 @@ jobs:
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module InvokeBuild
-          Install-Module PlatyPS
+          Install-Module platyPS
 
       - name: Perform an Invoke-Build from the command line
         shell: pwsh

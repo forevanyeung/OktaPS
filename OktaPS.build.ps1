@@ -298,13 +298,6 @@ task PublishInternalNexus {
 }
 
 task PlatyPS {
-    # PlatyPS bug load assembly order
-    Import-Module platyPS
-    $ErrorActionPreference = "SilentlyContinue"
-    Import-Module powershell-yaml -ErrorAction Ignore # failure intended
-    $ErrorActionPreference = "Continue"
-    Import-Module powershell-yaml
-
     Import-Module $outputManifestPath -Force
     New-MarkdownHelp -Module $config.Module -Out $docsReferenceFolder -Force
 }
