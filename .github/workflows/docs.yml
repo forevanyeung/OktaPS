@@ -16,8 +16,6 @@ jobs:
   docs:
     name: Publish to GitHub Wiki
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/powershell:latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
