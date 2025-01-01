@@ -297,25 +297,21 @@ task PublishInternalNexus {
     Write-Host -ForegroundColor Green "...Complete!"
 }
 
-task Build CleanOutput, 
-           CopyModuleManifest, 
-           AssembleModule, 
-           AssembleTypes, 
-           AssembleFormat,
-           DownloadDependencies, 
-           BumpBuildNumber,
-           UpdateModuleManifest
+task PlatyPS {
+    # PlatyPS bug load assembly order
+    Import-Module platyPS
+    $ErrorActionPreference = "SilentlyContinue"
+    Import-Module powershell-yaml -ErrorAction Ignore # failure intended
+    $ErrorActionPreference = "Continue"
+    Import-Module powershell-yaml
 
-task . {
-        $Script:environment = "Dev"
-    },
-    Build
+    Import-Module $outputManifestPath -Force
+    New-MarkdownHelp -Module $config.Module -Out $docsReferenceFolder -Force
+}
 
-task Install {
-        $Script:environment = "Install"
-        $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules"            # /OktaPS/pwsh_modules/
-     }, 
-     CleanPwshModule, 
-     DownloadDependencies
 
+task . { $Script:environment = "Dev"}, Build
+task Install { $Script:environment = "Install"; $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules" }, CleanPwshModule, DownloadDependencies
+task Build CleanOutput, CopyModuleManifest, AssembleModule, AssembleTypes, AssembleFormat, DownloadDependencies, BumpBuildNumber, UpdateModuleManifest
 task Publish PublishInternalNexus
+task Docs Build, PlatyPS

@@ -1,0 +1,48 @@
+name: Publish OktaPS documentation
+on:
+  push:
+    branches:
+      - docs
+    paths: [Docs/**, .github/workflows/docs.yml]
+
+concurrency:
+  group: docs
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    name: Publish to GitHub Wiki
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/powershell:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install InvokeBuild module
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module InvokeBuild
+      - name: Perform an Invoke-Build from the command line
+        shell: pwsh
+        run: Invoke-Build Docs
+
+      - name: Checkout Wiki
+        uses: actions/checkout@v4
+        with:
+            repository: ${{github.repository}}.wiki
+            path: ${{github.repository}}.wiki
+
+      - name: Push to wiki
+        run: |
+            set -e
+            cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
+            cp -r $GITHUB_WORKSPACE/${{github.repository}}/wiki/* .
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add .
+            git diff-index --quiet HEAD || git commit -m "action: update documentation" && git push
