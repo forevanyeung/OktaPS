@@ -299,7 +299,7 @@ task PublishInternalNexus {
 
 task PlatyPS {
     Import-Module $outputManifestPath -Force
-    New-MarkdownHelp -Module $config.Module -Out $docsReferenceFolder -Force
+    New-MarkdownHelp -Module $config.Module -Out $docsReferenceFolder -NoMetadata -Force
 }
 
 
