@@ -36,19 +36,25 @@ jobs:
         run: |
           find Docs/reference -type f -name "*.md" -exec sed -i '1 { /^---/ { :a N; /\n---/! ba; d} }' {} \;
 
+      - name: Add links to reference docs in sidebar
+        shell: sh
+        run: |
+          links=$(find Docs/reference -type f -name "*.md" -exec sh -c 'basename "$1" .md | sed "s/\(.*\)/[\1](\1)  /"' _ {} \; | sort)
+          echo $links >> Docs/_Sidebar.md
+
       - name: Checkout Wiki
         uses: actions/checkout@v4
         with:
-            repository: ${{github.repository}}.wiki
-            path: ${{github.repository}}.wiki
+          repository: ${{github.repository}}.wiki
+          path: ${{github.repository}}.wiki
 
       - name: Push to wiki
         run: |
-            set -e
-            cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
-            rm -rf *
-            cp -r $GITHUB_WORKSPACE/Docs/* .
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            git add .
-            git diff-index --quiet HEAD || git commit -m "action: update documentation" && git push
+          set -e
+          cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
+          rm -rf *
+          cp -r $GITHUB_WORKSPACE/Docs/* .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "action: update documentation" && git push
