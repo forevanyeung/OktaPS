@@ -7,3 +7,4 @@ okta.yaml
 # build
 release/
 pwsh_modules/
+Docs/reference
