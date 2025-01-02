@@ -40,7 +40,7 @@ jobs:
         shell: sh
         run: |
           links=$(find Docs/reference -type f -name "*.md" -exec sh -c 'basename "$1" .md | sed "s/\(.*\)/[\1](\1)  /"' _ {} \; | sort)
-          echo $links >> Docs/_Sidebar.md
+          printf "%s\n" $links >> Docs/_Sidebar.md
 
       - name: Checkout Wiki
         uses: actions/checkout@v4
