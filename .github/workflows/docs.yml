@@ -36,13 +36,12 @@ jobs:
         with:
             repository: ${{github.repository}}.wiki
             path: ${{github.repository}}.wiki
-            token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push to wiki
         run: |
             set -e
             cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
-            cp -r $GITHUB_WORKSPACE/${{github.repository}}/Docs/* .
+            cp -r $GITHUB_WORKSPACE/Docs/* .
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
             git add .
