@@ -1,0 +1,60 @@
+name: Publish OktaPS documentation
+on:
+  push:
+    branches:
+      - main
+    paths: [Docs/**, .github/workflows/docs.yml]
+
+concurrency:
+  group: docs
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    name: Publish to GitHub Wiki
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install required Powershell modules
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module InvokeBuild
+          Install-Module Microsoft.PowerShell.PlatyPS -AllowPreRelease
+
+      - name: Perform an Invoke-Build from the command line
+        shell: pwsh
+        run: Invoke-Build Docs
+
+      - name: Remove YAML front matter from markdown files
+        shell: sh
+        run: |
+          find Docs/reference -type f -name "*.md" -exec sed -i '1 { /^---/ { :a N; /\n---/! ba; d} }' {} \;
+
+      - name: Add links to reference docs in sidebar
+        shell: sh
+        run: |
+          links=$(find Docs/reference -type f -name "*.md" -exec sh -c 'basename "$1" .md | sed "s/\(.*\)/[\1](\1)/"' _ {} \; | sort)
+          printf "%s  \n" $links >> Docs/_Sidebar.md
+
+      - name: Checkout Wiki
+        uses: actions/checkout@v4
+        with:
+          repository: ${{github.repository}}.wiki
+          path: ${{github.repository}}.wiki
+
+      - name: Push to wiki
+        run: |
+          set -e
+          cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
+          rm -rf *
+          cp -r $GITHUB_WORKSPACE/Docs/* .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "action: update documentation" && git push

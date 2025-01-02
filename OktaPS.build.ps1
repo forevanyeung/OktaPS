@@ -297,25 +297,24 @@ task PublishInternalNexus {
     Write-Host -ForegroundColor Green "...Complete!"
 }
 
-task Build CleanOutput, 
-           CopyModuleManifest, 
-           AssembleModule, 
-           AssembleTypes, 
-           AssembleFormat,
-           DownloadDependencies, 
-           BumpBuildNumber,
-           UpdateModuleManifest
+task PlatyPS {
+	$null = Remove-Item $docsReferenceFolder -Force -Recurse -ErrorAction SilentlyContinue
+    Write-Host -NoNewLine "     Cleaning up directory: $docsReferenceFolder" 
+    $null = New-Item $docsReferenceFolder -ItemType Directory
+    Write-Host -ForegroundColor Green ' ...Complete!'
 
-task . {
-        $Script:environment = "Dev"
-    },
-    Build
+    Write-Host -NoNewLine "     Importing module $outputManifestPath" 
+    Import-Module $outputManifestPath -Force
+    Write-Host -ForegroundColor Green ' ...Complete!'
 
-task Install {
-        $Script:environment = "Install"
-        $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules"            # /OktaPS/pwsh_modules/
-     }, 
-     CleanPwshModule, 
-     DownloadDependencies
+    Write-Host -NoNewLine "     Generating markdown documentation" 
+    New-MarkdownCommandHelp -ModuleInfo (Get-Module $config.Module) -OutputFolder $docsReferenceFolder -Force
+    Write-Host -ForegroundColor Green ' ...Complete!'
+}
 
+
+task . { $Script:environment = "Dev"}, Build
+task Install { $Script:environment = "Install"; $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules" }, CleanPwshModule, DownloadDependencies
+task Build CleanOutput, CopyModuleManifest, AssembleModule, AssembleTypes, AssembleFormat, DownloadDependencies, BumpBuildNumber, UpdateModuleManifest
 task Publish PublishInternalNexus
+task Docs Build, PlatyPS
