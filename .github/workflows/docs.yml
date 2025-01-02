@@ -39,8 +39,8 @@ jobs:
       - name: Add links to reference docs in sidebar
         shell: sh
         run: |
-          links=$(find Docs/reference -type f -name "*.md" -exec sh -c 'basename "$1" .md | sed "s/\(.*\)/[\1](\1)  /"' _ {} \; | sort)
-          printf "%s\n" $links >> Docs/_Sidebar.md
+          links=$(find Docs/reference -type f -name "*.md" -exec sh -c 'basename "$1" .md | sed "s/\(.*\)/[\1](\1)/"' _ {} \; | sort)
+          printf "%s  \n" $links >> Docs/_Sidebar.md
 
       - name: Checkout Wiki
         uses: actions/checkout@v4
