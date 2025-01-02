@@ -25,11 +25,16 @@ jobs:
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module InvokeBuild
-          Install-Module platyPS
+          Install-Module Microsoft.PowerShell.PlatyPS -AllowPreRelease
 
       - name: Perform an Invoke-Build from the command line
         shell: pwsh
         run: Invoke-Build Docs
+
+      - name: Remove YAML front matter from markdown files
+        shell: sh
+        run: |
+          find Docs/reference -type f -name "*.md" -exec sed -i '1 { /^---/ { :a N; /\n---/! ba; d} }' {} \;
 
       - name: Checkout Wiki
         uses: actions/checkout@v4
