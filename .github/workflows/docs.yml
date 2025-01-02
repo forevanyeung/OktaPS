@@ -2,7 +2,7 @@ name: Publish OktaPS documentation
 on:
   push:
     branches:
-      - docs-new
+      - main
     paths: [Docs/**, .github/workflows/docs.yml]
 
 concurrency:
