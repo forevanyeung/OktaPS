@@ -90,7 +90,8 @@ task AssembleModule {
     $private = Join-Path $sourceFolder "Private"
     Write-Host "     Private Source Files: $private"
     $CombineFiles += "## PRIVATE MODULE FUNCTIONS AND DATA ## `r`n`r`n"
-    Get-ChildItem $private | ForEach-Object {
+    $privateFunctions = Get-ChildItem $private -Filter *.ps1 -Recurse
+    $privateFunctions | ForEach-Object {
         Write-Host "          $($_.Name)"
         $CombineFiles += (Get-content $_ -Raw) + "`r`n`r`n"
     }
@@ -100,7 +101,7 @@ task AssembleModule {
     $public = Join-Path $sourceFolder "Public"
     $CombineFiles += "## PUBLIC MODULE FUNCTIONS AND DATA ##`r`n`r`n"
     Write-Host  "     Public Source Files: $public"
-    $publicFunctions = Get-ChildItem -Path $public
+    $publicFunctions = Get-ChildItem -Path $public -Filter *.ps1 -Recurse 
     $publicFunctions | ForEach-Object {
         Write-Host "          $($_.Name)"
         $CombineFiles += (Get-content $_ -Raw) + "`r`n`r`n"

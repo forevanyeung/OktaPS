@@ -3,8 +3,8 @@
 
 # Get public and private function definition files
 $ModulePath = $PSScriptRoot -eq "" ? $($pseditor.geteditorcontext().currentfile.path | split-path -parent) : $PSScriptRoot
-$Public = @( Get-ChildItem -Path $ModulePath\Public\*.ps1 -ErrorAction SilentlyContinue )
-$Private = @( Get-ChildItem -Path $ModulePath\Private\*.ps1 -ErrorAction SilentlyContinue )
+$Public = @( Get-ChildItem -Path $ModulePath\Public -Filter *.ps1 -Recurse -ErrorAction SilentlyContinue )
+$Private = @( Get-ChildItem -Path $ModulePath\Private -Filter *.ps1 -Recurse -ErrorAction SilentlyContinue )
 
 Foreach($fn in @($Public + $Private)) {
     Try {
