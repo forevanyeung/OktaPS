@@ -62,6 +62,9 @@ Function Connect-Okta {
 
     Switch($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
+            # Default to authorization code method
+            $AuthFlow = "AuthorizationCode"
+
             $oktaYAMLPath = Get-OktaConfig -Path $Config
             If(-not [String]::IsNullOrEmpty($oktaYAMLPath)) {
                 Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
@@ -70,13 +73,16 @@ Function Connect-Okta {
                 $yamlConfig = $yaml.okta.client
 
                 If($yamlConfig.authorizationMode -eq "PrivateKey") {
+                    $AuthFlow = "PrivateKey"
+                    
                     $OrgUrl = $yamlConfig.orgUrl
                     $ClientId = $yamlConfig.clientId
                     $Scopes = $yamlConfig.scopes
                     $PrivateKey = $yamlConfig.privateKey
-                    $AuthFlow = "PrivateKey"
 
                 } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
+                    $AuthFlow = "AuthorizationCode"
+
                     $AuthorizationModeSplat = @{
                         OktaDomain = $yamlConfig.orgUrl
                         ClientId = $yamlConfig.clientId
@@ -85,27 +91,23 @@ Function Connect-Okta {
                     If($yamlConfig.port) {
                         $AuthorizationModeSplat['Port'] = $yamlConfig.port
                     }
-                    $AuthFlow = "AuthorizationCode"
         
                 } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
+                    $AuthFlow = "SSWS"
+
                     $OrgUrl = $yamlConfig.orgUrl
                     $API = $yamlConfig.token
-                    $AuthFlow = "SSWS"
         
                 } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
+                    $AuthFlow = "Credential"
+
                     $OrgUrl = $yamlConfig.orgUrl
                     $Credential = Get-Credential $yamlConfig.username
-                    $AuthFlow = "Credential"
-                    Write-Verbose $OrgUrl
+
                 } Else {
                     Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
-                    Write-Error "Defaulting to credential auth method"
-                    $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
-                    $AuthFlow = "Credential"
+                    Write-Error "Defaulting to authorization code method"
                 }
-            } Else {
-                $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
-                $AuthFlow = "Credential"
             }
         }
 

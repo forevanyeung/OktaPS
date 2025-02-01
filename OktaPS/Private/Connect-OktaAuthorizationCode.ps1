@@ -1,11 +1,11 @@
 Function Connect-OktaAuthorizationCode {
     [CmdletBinding()]
     param (
-        [Parameter()]
+        [Parameter(Mandatory)]
         [String]
         $OktaDomain,
 
-        [Parameter()]
+        [Parameter(Mandatory)]
         [String]
         $ClientId,
 
@@ -15,7 +15,7 @@ Function Connect-OktaAuthorizationCode {
 
         [Parameter()]
         [String]
-        $Port = 8080
+        $Port
     )
 
     $wellknown = Invoke-RestMethod -Method GET -Uri "$OktaDomain/.well-known/oauth-authorization-server"
