@@ -62,9 +62,6 @@ Function Connect-Okta {
 
     Switch($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
-            # Default to authorization code flow
-            $AuthFlow = "AuthorizationCode"
-            
             $oktaYAMLPath = Get-OktaConfig -Path $Config
             If(-not [String]::IsNullOrEmpty($oktaYAMLPath)) {
                 Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
@@ -73,43 +70,42 @@ Function Connect-Okta {
                 $yamlConfig = $yaml.okta.client
 
                 If($yamlConfig.authorizationMode -eq "PrivateKey") {
+                    $OrgUrl = $yamlConfig.orgUrl
+                    $ClientId = $yamlConfig.clientId
+                    $Scopes = $yamlConfig.scopes
+                    $PrivateKey = $yamlConfig.privateKey
                     $AuthFlow = "PrivateKey"
-                    $PrivateKeySplat = @{
-                        OktaDomain = $yamlConfig.orgUrl
-                        ClientId = $yamlConfig.clientId
-                        Scopes = $yamlConfig.scopes
-                        PrivateKey = $yamlConfig.privateKey
-                    }
 
                 } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
-                    $AuthFlow = "AuthorizationCode"
-                    $AuthorizationCodeSplat = @{
+                    $AuthorizationModeSplat = @{
                         OktaDomain = $yamlConfig.orgUrl
                         ClientId = $yamlConfig.clientId
                         Scopes = $yamlConfig.scopes
                     }
                     If($yamlConfig.port) {
-                        $AuthorizationCodeSplat['Port'] = $yamlConfig.port
+                        $AuthorizationModeSplat['Port'] = $yamlConfig.port
                     }
+                    $AuthFlow = "AuthorizationCode"
         
                 } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
+                    $OrgUrl = $yamlConfig.orgUrl
+                    $API = $yamlConfig.token
                     $AuthFlow = "SSWS"
-                    $SSWSSplat = @{
-                        OktaDomain = $yamlConfig.orgUrl
-                        API = $yamlConfig.token
-                    }
         
                 } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
+                    $OrgUrl = $yamlConfig.orgUrl
+                    $Credential = Get-Credential $yamlConfig.username
                     $AuthFlow = "Credential"
-                    $CredentialSplat = @{
-                        OktaDomain = $yamlConfig.orgUrl
-                        Credential = Get-Credential $yamlConfig.username
-                    }
-
+                    Write-Verbose $OrgUrl
                 } Else {
                     Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
-                    Write-Error "Defaulting to authorization code method"
+                    Write-Error "Defaulting to credential auth method"
+                    $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
+                    $AuthFlow = "Credential"
                 }
+            } Else {
+                $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
+                $AuthFlow = "Credential"
             }
         }
 
@@ -122,32 +118,32 @@ Function Connect-Okta {
     Switch($AuthFlow) {
         "SSWS" {
             Write-Verbose "Using API auth method"
-            Connect-OktaAPI @SSWSSplat -ErrorAction Stop
+            Connect-OktaAPI -OktaDomain $OrgUrl -API $API -ErrorAction Stop
 
             $saveConfig = @{
-                orgUrl = $SSWSSplat.OktaDomain
+                orgUrl = $OrgUrl
                 authorizationMode = "SSWS"
-                token = $SSWSSplat.API
+                token = $API
             }
         }
 
         "AuthorizationCode" {
             Write-Verbose "Using OAuth 2.0 authoriation code auth method"
-            Connect-OktaAuthorizationCode @AuthorizationCodeSplat -ErrorAction Stop
+            Connect-OktaAuthorizationCode @AuthorizationModeSplat -ErrorAction Stop
         }
 
         "PrivateKey" {
             Write-Verbose "Using OAuth 2.0 private key auth method"
-            Connect-OktaPrivateKey @PrivateKeySplat -ErrorAction Stop
+            Connect-OktaPrivateKey -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -PrivateKey $PrivateKey -ErrorAction Stop
         }
 
         "Credential" {
             Write-Verbose "Using Credential auth method"
-            Connect-OktaCredential @CredentialSplat -ErrorAction Stop
+            Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
 
             $saveConfig = @{
-                orgUrl = $CredentialSplat.OktaDomain
-                username = $CredentialSplat.Credential.UserName
+                orgUrl = $OrgUrl
+                username = $Credential.UserName
             }
         }
 

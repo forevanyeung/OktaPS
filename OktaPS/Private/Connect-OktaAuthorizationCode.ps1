@@ -1,11 +1,11 @@
 Function Connect-OktaAuthorizationCode {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter()]
         [String]
         $OktaDomain,
 
-        [Parameter(Mandatory)]
+        [Parameter()]
         [String]
         $ClientId,
 
