@@ -3,7 +3,7 @@ Function Set-OktaAuthentication {
     param (
         # Parameter help description
         [Parameter(Mandatory)]
-        [ValidateSet("SSWS", "PrivateKey", "Credential")]
+        [ValidateSet("SSWS", "PrivateKey", "Credential", "AuthorizationCode")]
         [String]
         $AuthorizationMode,
 

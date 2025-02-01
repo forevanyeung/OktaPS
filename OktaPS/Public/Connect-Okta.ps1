@@ -75,6 +75,17 @@ Function Connect-Okta {
                     $Scopes = $yamlConfig.scopes
                     $PrivateKey = $yamlConfig.privateKey
                     $AuthFlow = "PrivateKey"
+
+                } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
+                    $AuthorizationModeSplat = @{
+                        OktaDomain = $yamlConfig.orgUrl
+                        ClientId = $yamlConfig.clientId
+                        Scopes = $yamlConfig.scopes
+                    }
+                    If($yamlConfig.port) {
+                        $AuthorizationModeSplat['Port'] = $yamlConfig.port
+                    }
+                    $AuthFlow = "AuthorizationCode"
         
                 } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
                     $OrgUrl = $yamlConfig.orgUrl
@@ -116,6 +127,11 @@ Function Connect-Okta {
             }
         }
 
+        "AuthorizationCode" {
+            Write-Verbose "Using OAuth 2.0 authoriation code auth method"
+            Connect-OktaAuthorizationCode @AuthorizationModeSplat -ErrorAction Stop
+        }
+
         "PrivateKey" {
             Write-Verbose "Using OAuth 2.0 private key auth method"
             Connect-OktaPrivateKey -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -PrivateKey $PrivateKey -ErrorAction Stop
@@ -136,7 +152,7 @@ Function Connect-Okta {
         }
     }
 
-    Write-Host "Connected to $OrgUrl"
+    Write-Host "Connected to $Script:OktaDomain"
 
     If($Save) {
         Set-OktaConfig -Path $SavePath -Config $saveConfig
