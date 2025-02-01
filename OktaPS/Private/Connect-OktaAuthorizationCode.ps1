@@ -46,7 +46,7 @@ Function Connect-OktaAuthorizationCode {
     $jobResult = Receive-Job -Job $job -Wait -AutoRemoveJob
 
     # Verify state
-    If( $jobResult.state -ne $state ) {
+    If( "state" -notin $jobResult.Keys -or $jobResult.state -ne $state ) {
         Write-Error "State mismatch. Expected: $state, Received: $($jobResult.state)"
         Return
     }

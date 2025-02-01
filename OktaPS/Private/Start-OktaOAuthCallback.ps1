@@ -1,8 +1,12 @@
 function Start-OktaOAuthCallback {
     param (
         [Parameter(Mandatory, Position = 0)]
-        [int]
-        $Port
+        [Int]
+        $Port,
+
+        [Parameter()]    
+        [Int]
+        $Timeout = 30
     )
 
     $listener = New-Object System.Net.HttpListener
@@ -10,7 +14,15 @@ function Start-OktaOAuthCallback {
     $listener.Start()
     Write-Verbose "Listening on port for authentication callback $Port..."
 
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
     while ($listener.IsListening) {
+        if ($stopwatch.Elapsed.TotalSeconds -ge $Timeout) {
+            Write-Error "Timeout ($($Timeout)s) exceeded waiting for authentication callback"
+            $listener.Stop()
+            return $null
+        }
+
         $context = $listener.GetContext()
         $request = $context.Request
         $response = $context.Response
@@ -42,6 +54,8 @@ function Start-OktaOAuthCallback {
         } else {
             $response.StatusCode = 404
             $response.Close()
+
+            return $null
         }
     }
 }
