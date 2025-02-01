@@ -60,9 +60,7 @@ Function Connect-OktaAuthorizationCode {
         code_verifier = $pkce.code_verifier
     }
 
-    # use IWR to create a web session variable
-    $null = Invoke-WebRequest -Uri $OktaDomain -SessionVariable OktaSSO
-    $OktaSSO.Headers.Add("Authorization", "$($auth.token_type) $($auth.access_token)")
+    Set-OktaAuthentication -AuthorizationMode "AuthorizationCode" -Domain $OktaDomain -ClientId $ClientId -Token $auth.access_token -RefreshToken $auth.refresh_token -ExpiresIn $auth.expires_in
 
-    Set-OktaAuthentication -AuthorizationMode "AuthorizationCode" -Session $OktaSSO -Domain $OktaDomain -ExpiresIn $auth.expires_in
+    Return
 }
