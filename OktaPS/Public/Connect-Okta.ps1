@@ -22,12 +22,28 @@ Function Connect-Okta {
     [CmdletBinding(DefaultParameterSetName='SavedConfig')]
     param (
         # Okta organization url beginning with https://
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory=$True)]
         [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
         [Parameter(ParameterSetName = 'APIAuth', Mandatory=$True)]
         [Alias("OktaDomain")]
         [ValidatePattern("^https://", ErrorMessage="URL must begin with https://")]
         [String]
         $OrgUrl,
+
+        # OAuth client ID
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory=$True)]
+        [String]
+        $ClientId,
+
+        # OAuth scopes
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory=$True)]
+        [String[]]
+        $Scopes,
+
+        # OAuth redirect port
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth')]
+        [Int]
+        $Port = 8080,
 
         # Okta admin credentials
         [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
@@ -40,16 +56,16 @@ Function Connect-Okta {
         $API,
 
         # Save authentication to .yaml config
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth')]
         [Parameter(ParameterSetName = 'CredentialAuth')]
-        [Parameter(ParameterSetName = 'CredentialAuthSave')]
         [Parameter(ParameterSetName = 'APIAuth')]
-        [Parameter(ParameterSetName = 'APIAuthSave')]
         [Switch]
         $Save = $false,
 
         # Path to save .yaml config file, defaults to the user's home directory ~/.okta/okta.yaml
-        [Parameter(ParameterSetName = 'CredentialAuthSave')]
-        [Parameter(ParameterSetName = 'APIAuthSave')]
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth')]
+        [Parameter(ParameterSetName = 'CredentialAuth')]
+        [Parameter(ParameterSetName = 'APIAuth')]
         [String]
         $SavePath = (Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta\okta.yaml"),
 
@@ -62,6 +78,9 @@ Function Connect-Okta {
 
     Switch($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
+            # Default to authorization code method
+            $AuthFlow = "AuthorizationCode"
+
             $oktaYAMLPath = Get-OktaConfig -Path $Config
             If(-not [String]::IsNullOrEmpty($oktaYAMLPath)) {
                 Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
@@ -70,34 +89,44 @@ Function Connect-Okta {
                 $yamlConfig = $yaml.okta.client
 
                 If($yamlConfig.authorizationMode -eq "PrivateKey") {
+                    $AuthFlow = "PrivateKey"
+
                     $OrgUrl = $yamlConfig.orgUrl
                     $ClientId = $yamlConfig.clientId
                     $Scopes = $yamlConfig.scopes
                     $PrivateKey = $yamlConfig.privateKey
-                    $AuthFlow = "PrivateKey"
+
+                } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
+                    $AuthFlow = "AuthorizationCode"
+
+                    $OrgUrl = $yamlConfig.orgUrl
+                    $ClientId = $yamlConfig.clientId
+                    $Scopes = $yamlConfig.scopes
+
+                    If($yamlConfig.port) {
+                        $Port = $yamlConfig.port
+                    }
         
                 } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
+                    $AuthFlow = "SSWS"
+
                     $OrgUrl = $yamlConfig.orgUrl
                     $API = $yamlConfig.token
-                    $AuthFlow = "SSWS"
         
                 } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
+                    $AuthFlow = "Credential"
+
                     $OrgUrl = $yamlConfig.orgUrl
                     $Credential = Get-Credential $yamlConfig.username
-                    $AuthFlow = "Credential"
-                    Write-Verbose $OrgUrl
+
                 } Else {
                     Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
-                    Write-Error "Defaulting to credential auth method"
-                    $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
-                    $AuthFlow = "Credential"
+                    Write-Error "Defaulting to authorization code method"
                 }
-            } Else {
-                $OrgUrl = Read-Host -Prompt "Enter your Okta organization url (with https://)"
-                $AuthFlow = "Credential"
             }
         }
 
+        "AuthorizationCodeAuth" { $AuthFlow = "AuthorizationCode" }
         "APIAuth" { $AuthFlow = "SSWS" }
         "CredentialAuth" { $AuthFlow = "Credential" }
     }
@@ -113,6 +142,32 @@ Function Connect-Okta {
                 orgUrl = $OrgUrl
                 authorizationMode = "SSWS"
                 token = $API
+            }
+        }
+
+        "AuthorizationCode" {
+            Write-Verbose "Using OAuth 2.0 authoriation code auth method"
+            If($Port) {
+
+                Connect-OktaAuthorizationCode -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -Port $Port -ErrorAction Stop
+
+                $saveConfig = @{
+                    orgUrl = $OrgUrl
+                    authorizationMode = "AuthorizationCode"
+                    clientId = $ClientId
+                    scopes = $Scopes
+                    port = $Port
+                }
+            } else {
+                
+                Connect-OktaAuthorizationCode -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -ErrorAction Stop
+
+                $saveConfig = @{
+                    orgUrl = $OrgUrl
+                    authorizationMode = "AuthorizationCode"
+                    clientId = $ClientId
+                    scopes = $Scopes
+                }
             }
         }
 
@@ -136,7 +191,7 @@ Function Connect-Okta {
         }
     }
 
-    Write-Host "Connected to $OrgUrl"
+    Write-Host "Connected to $Script:OktaDomain"
 
     If($Save) {
         Set-OktaConfig -Path $SavePath -Config $saveConfig
