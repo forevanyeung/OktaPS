@@ -38,11 +38,7 @@ Function Connect-OktaPrivateKey {
         "client_assertion" = $jwt
     }
 
-    # use IWR to create a web session variable
-    $null = Invoke-WebRequest -Uri $OktaDomain -SessionVariable OktaSSO
-    $OktaSSO.Headers.Add("Authorization", "$($auth.token_type) $($auth.access_token)")
-
-    Set-OktaAuthentication -AuthorizationMode "PrivateKey" -Session $OktaSSO -Domain $OktaDomain -ExpiresIn $auth.expires_in
+    Set-OktaAuthentication -AuthorizationMode "PrivateKey" -Domain $OktaDomain -ClientId $ClientId -Token $auth.access_token -RefreshToken $auth.refresh_token -ExpiresIn $auth.expires_in
 
     Return
 }

@@ -14,22 +14,21 @@ Install-Module -Name "OktaPS"
 You can also run a development build of OktaPS from source. The development build will export public and private functions to be available from the console. Read more about [building OktaPS](./Build/Build.md). 
 
 ## Getting Started
-1. Connect to your Okta organization with the OrgUrl and your username, PowerShell will prompt you for the password. If you have 2FA enabled on your account, it will automatically send a push notification (Duo only supported at this time). See the Wiki for more authentication options (API or private key).
-    ```pwsh
-    PS > Connect-Okta -OrgUrl "https://dev-8675309.okta.com" -Username "anna.unstoppable@forevanyeung.com"
+Recommened to use Authorization Code method for authentication. This method is the most versatile and supports FastPass. 
 
-    PowerShell credential request
-    Enter your credentials.
-    Password for user anna.unstoppable@forevanyeung.com: 
-    ```
-1. You can now run Okta cmdlets. See the Wiki for available commands.
+1. Create an OIDC app for OktaPS in your organization if this is the first time, if this has already been done, you can use the same app, remember to assign yourself to the app. More information on how to configure an OIDC app, see [Authentication](Authentication#Authorization_Code__Recommended_).
+2. Replace the Okta domain with your won and copy the Client Id from the OIDC app to authenticate.
     ```pwsh
-    PS > Get-OktaUser -Identity anna.unstoppable
+    Connect-Okta -OktaDomain "https://dev-8675309.okta.com" -ClientId "0oa...7" -Scopes @("okta.users.read", "okta.users.manage") -Port 8080
+    ```
+3. You are now ready to execute OktaPS cmdlets. This first example gets a user with the username anna.unstoppable, replace the username with your own and give it a try. 
+    ```pwsh
+    Get-OktaUser -Identity anna.unstoppable
     ```
 
-1. Here's an example with what you can do with pipelining
+4. Here's an example of how to pipe the results of one command into another:
     ```pwsh
-    PS > Get-OktaGroup -Identity Unstoppables | Add-OktaGroupMember -Identity anna.unstoppable
+    Get-OktaGroup -Identity Unstoppables | Add-OktaGroupMember -Identity anna.unstoppable
     ```
 
 ### Admin APIs
