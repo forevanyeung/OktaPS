@@ -20,6 +20,10 @@ Function OktaConfigPathArgumentCompleter {
     )
 
     $configs = Foreach($path in $location) {
+        If(-not (Test-Path $path)) {
+            continue
+        }
+        
         Get-ChildItem -Path $path -Filter "okta.yaml" -Recurse
         Get-ChildItem -Path $path -Filter "okta.yml" -Recurse
         Get-ChildItem -Path $path -Filter "*.yaml" -Recurse | Where-Object { $_.name -notlike "okta.yaml" }

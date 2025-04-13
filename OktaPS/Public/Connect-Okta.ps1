@@ -82,47 +82,49 @@ Function Connect-Okta {
             $AuthFlow = "AuthorizationCode"
 
             $oktaYAMLPath = Get-OktaConfig -Path $Config
-            If(-not [String]::IsNullOrEmpty($oktaYAMLPath)) {
-                Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
+            If([String]::IsNullOrEmpty($oktaYAMLPath)) {
+                Return
+            }
 
-                $yaml = Get-Content $oktaYAMLPath | ConvertFrom-Yaml
-                $yamlConfig = $yaml.okta.client
+            Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
 
-                If($yamlConfig.authorizationMode -eq "PrivateKey") {
-                    $AuthFlow = "PrivateKey"
+            $yaml = Get-Content $oktaYAMLPath | ConvertFrom-Yaml
+            $yamlConfig = $yaml.okta.client
 
-                    $OrgUrl = $yamlConfig.orgUrl
-                    $ClientId = $yamlConfig.clientId
-                    $Scopes = $yamlConfig.scopes
-                    $PrivateKey = $yamlConfig.privateKey
+            If($yamlConfig.authorizationMode -eq "PrivateKey") {
+                $AuthFlow = "PrivateKey"
 
-                } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
-                    $AuthFlow = "AuthorizationCode"
+                $OrgUrl = $yamlConfig.orgUrl
+                $ClientId = $yamlConfig.clientId
+                $Scopes = $yamlConfig.scopes
+                $PrivateKey = $yamlConfig.privateKey
 
-                    $OrgUrl = $yamlConfig.orgUrl
-                    $ClientId = $yamlConfig.clientId
-                    $Scopes = $yamlConfig.scopes
+            } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
+                $AuthFlow = "AuthorizationCode"
 
-                    If($yamlConfig.port) {
-                        $Port = $yamlConfig.port
-                    }
-        
-                } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
-                    $AuthFlow = "SSWS"
+                $OrgUrl = $yamlConfig.orgUrl
+                $ClientId = $yamlConfig.clientId
+                $Scopes = $yamlConfig.scopes
 
-                    $OrgUrl = $yamlConfig.orgUrl
-                    $API = $yamlConfig.token
-        
-                } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
-                    $AuthFlow = "Credential"
-
-                    $OrgUrl = $yamlConfig.orgUrl
-                    $Credential = Get-Credential $yamlConfig.username
-
-                } Else {
-                    Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
-                    Write-Error "Defaulting to authorization code method"
+                If($yamlConfig.port) {
+                    $Port = $yamlConfig.port
                 }
+    
+            } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
+                $AuthFlow = "SSWS"
+
+                $OrgUrl = $yamlConfig.orgUrl
+                $API = $yamlConfig.token
+    
+            } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
+                $AuthFlow = "Credential"
+
+                $OrgUrl = $yamlConfig.orgUrl
+                $Credential = Get-Credential $yamlConfig.username
+
+            } Else {
+                Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
+                Write-Error "Defaulting to authorization code method"
             }
         }
 

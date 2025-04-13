@@ -82,6 +82,14 @@ Function Set-OktaAuthentication {
         Write-Verbose "Setting OktaSSOExpirationUTC to $Script:OktaSSOExpirationUTC"
     }
 
+    If($PSCmdlet.ParameterSetName -eq "SSWS") {
+        $Script:OktaSSO = $Session
+        Write-Verbose "Setting OktaSSO web session"
+
+        $Script:OktaSSOExpirationUTC = [datetime]::MaxValue
+        Write-Verbose "Setting OktaSSOExpirationUTC to max"
+    }
+
     If($PSCmdlet.ParameterSetName -eq "Credentials") {
         $Script:OktaSSO = $Session
         Write-Verbose "Setting OktaSSO web session"
