@@ -29,7 +29,7 @@ function Start-OktaOAuthCallback {
 
         if ($request.Url.AbsolutePath -eq "/login/callback") {
             $queryParams = [System.Web.HttpUtility]::ParseQueryString($request.Url.Query)
-            Write-Verbose "Authorization code received"
+            Write-Verbose "Received request to /login/callback"
 
             If("code" -notin $queryParams.Keys -or [string]::IsNullOrEmpty($queryParams["code"])) {
                 $responseString = "There was an error receiving authorization code, please try again. You can close this window."
@@ -54,6 +54,7 @@ function Start-OktaOAuthCallback {
         } else {
             $response.StatusCode = 404
             $response.Close()
+            $listener.Stop()
 
             return $null
         }

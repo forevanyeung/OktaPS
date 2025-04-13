@@ -16,7 +16,7 @@ You can also run a development build of OktaPS from source. The development buil
 ## Getting Started
 Recommened to use Authorization Code method for authentication. This method is the most versatile and supports FastPass. 
 
-1. Create an OIDC app for OktaPS in your organization if this is the first time, if this has already been done, you can use the same app, remember to assign yourself to the app. More information on how to configure an OIDC app, see [Authentication](Authentication#Authorization_Code__Recommended_).
+1. Create an OIDC app for OktaPS in your organization if this is the first time, if this has already been done, you can use the same app, remember to assign yourself to the app. More information on how to configure an OIDC app, see [Authentication](https://github.com/forevanyeung/OktaPS/wiki/Authentication#authorization-code-recommended).
 2. Replace the Okta domain with your won and copy the Client Id from the OIDC app to authenticate.
     ```pwsh
     Connect-Okta -OktaDomain "https://dev-8675309.okta.com" -ClientId "0oa...7" -Scopes @("okta.users.read", "okta.users.manage") -Port 8080
