@@ -15,9 +15,9 @@ Function Add-OktaAppMember {
     }
 
     process {
-        foreach($user in $Identity) {
+        foreach ($user in $Identity) {
             Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/apps/$($OktaApp.Id)/users" -Body @{
-                id = $user.Id
+                id    = $user.Id
                 scope = "USER"
             }
         }

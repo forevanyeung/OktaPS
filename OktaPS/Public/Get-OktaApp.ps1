@@ -1,44 +1,47 @@
 Function Get-OktaApp {
     [CmdletBinding()]
     param (
-        [Parameter(ParameterSetName="ByApp")]
+        [Parameter(ParameterSetName = "ByApp")]
         [String]
         $App,
 
-        [Parameter(ParameterSetName="ByIdentity")]
+        [Parameter(ParameterSetName = "ByIdentity")]
         [OktaUser]
         $Identity,
 
-        [Parameter(ParameterSetName="ByGroup")]
+        [Parameter(ParameterSetName = "ByGroup")]
         [String]
         $Group
     )
     
-    If($PSCmdlet.ParameterSetName -like "ByApp") {
+    If ($PSCmdlet.ParameterSetName -like "ByApp") {
         # attempt Id search, fail attempt Name search
-        If($App -like "0oa*") {
+        If ($App -like "0oa*") {
             $response = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/apps/$App" -ErrorAction SilentlyContinue
             Write-Verbose "Tried Id search, nothing found."
         }
 
         # attempt Name search
-        If($null -eq $response) {
+        If ($null -eq $response) {
             $response = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/apps" -Query @{
                 q = $App
             }
         }
-    } ElseIf($PSCmdlet.ParameterSetName -like "ByIdentity") {
+    }
+    ElseIf ($PSCmdlet.ParameterSetName -like "ByIdentity") {
         Write-Error "Not Implemented"
         # TODO
-    } ElseIf($PSCmdlet.ParameterSetName -like "ByGroup") {
+    }
+    ElseIf ($PSCmdlet.ParameterSetName -like "ByGroup") {
         Write-Error "Not-Implemented"
         # TODO
     }
 
-    If($response) {
+    If ($response) {
         $OktaApp = ConvertTo-OktaApp -InputObject $response
         Return $OktaApp
-    } else {
+    }
+    else {
         Throw "No Okta app found."
     }
 }

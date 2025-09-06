@@ -1,16 +1,16 @@
 #Requires -Modules 'InvokeBuild'
 
-[CmdletBinding(DefaultParameterSetName="Build")]
+[CmdletBinding(DefaultParameterSetName = "Build")]
 param (
     [Parameter()]
     [Version]
     $SemVer = (property SemVer "0.0.0"),
 
-    [Parameter(ParameterSetName="Publish")]
+    [Parameter(ParameterSetName = "Publish")]
     [String]
     $NugetServer = (property NugetServer ""), 
     
-    [Parameter(ParameterSetName="Publish")]
+    [Parameter(ParameterSetName = "Publish")]
     [String]
     $NugetApiKey = (property NugetApiKey "")
 )
@@ -35,11 +35,12 @@ Enter-Build {
 
     # Dot source build functions
     $build = @( Get-ChildItem -Path $buildFolder -Filter "*.ps1" -ErrorAction SilentlyContinue )
-    Foreach($import in $build) {
+    Foreach ($import in $build) {
         Try {
             Write-Verbose "Importing function: $($import.FullName)"
             . $import.FullName
-        } Catch {
+        }
+        Catch {
             Write-Error -Message "Failed to import function $($import.FullName): $_"
         }   
     }
@@ -47,7 +48,7 @@ Enter-Build {
 
 # Synopsis: Remove
 task CleanOutput {
-	$null = Remove-Item $outputFolder -Force -Recurse -ErrorAction SilentlyContinue
+    $null = Remove-Item $outputFolder -Force -Recurse -ErrorAction SilentlyContinue
     Write-Host -NoNewLine "     Cleaning up directory: $outputFolder" 
     $null = New-Item $outputFolder -ItemType Directory
     Write-Host -ForegroundColor Green ' ...Complete!'
@@ -194,7 +195,7 @@ task DownloadDependencies {
             # Write-Host "Environment is dev. Using cached dependencies from $cachedDependencies."
 
             $dep = Join-Path $cachedDependencies $package.key
-            If(Test-Path $dep) {
+            If (Test-Path $dep) {
                 $null = New-Item -ItemType Directory -Path $pwshModuleFolder -Name $package.key
                 Copy-Item -Path $dep -Destination $pwshModuleFolder -Recurse -Force
                 
@@ -233,11 +234,11 @@ task DownloadDependencies {
     }
 
     # find psm1
-    If($environment -ne "Install") {
+    If ($environment -ne "Install") {
         $nestedModules = Get-ChildItem -Path $pwshModuleFolder -Filter *.psm1 -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
             $_.FullName.Substring($outputFolder.Length + 1)
         }
-        If($nestedModules.Count -gt 0) {
+        If ($nestedModules.Count -gt 0) {
             Write-Host -NoNewLine "     Adding nested modules to manifest" 
             Update-ModuleManifest -Path $outputManifestPath -NestedModules $nestedModules
             Write-Host -ForegroundColor Green "...Complete!"
@@ -248,10 +249,11 @@ task DownloadDependencies {
 # Synopsis: Increment the build number
 task BumpBuildNumber {
     # if semver is not specified, try to get it from gitversion, default to 0.0.0
-    if((-not $SemVer) -or ($SemVer -eq [version]"0.0.0")) {
+    if ((-not $SemVer) -or ($SemVer -eq [version]"0.0.0")) {
         try {
             $SemVer = [version](gitversion | ConvertFrom-Json).SemVer
-        } catch {
+        }
+        catch {
             $SemVer = [version]"0.0.0"
         }
     }
@@ -271,21 +273,21 @@ task UpdateModuleManifest {
 }
 
 task PublishInternalNexus {
-    If(-not $NugetServer) {
+    If (-not $NugetServer) {
         throw "missing nugetserver"
     }
 
-    If(-not $NugetApiKey) {
+    If (-not $NugetApiKey) {
         throw "missing nugetapikey"
     }
 
-    If(-not (Test-Path $outputManifestPath)) {
+    If (-not (Test-Path $outputManifestPath)) {
         throw "missing build files, run Invoke-Build first"
     }
 
     Write-Host -NoNewline "     Looking for PSRepository"
     $repository = Get-PSRepository | Where-Object { $_.PublishLocation -eq $NugetServer } | Select-Object -First 1 -ExpandProperty "Name"
-    If(-not $repository) {
+    If (-not $repository) {
         Write-Host -NoNewline "...Registering PSRepository"
         $repository = "Nexus-OktaPS"
         Register-PSRepository -Name $repository -SourceLocation $NugetServer -PublishLocation $NugetServer
@@ -298,7 +300,7 @@ task PublishInternalNexus {
 }
 
 task PlatyPS {
-	$null = Remove-Item $docsReferenceFolder -Force -Recurse -ErrorAction SilentlyContinue
+    $null = Remove-Item $docsReferenceFolder -Force -Recurse -ErrorAction SilentlyContinue
     Write-Host -NoNewLine "     Cleaning up directory: $docsReferenceFolder" 
     $null = New-Item $docsReferenceFolder -ItemType Directory
     Write-Host -ForegroundColor Green ' ...Complete!'
@@ -313,7 +315,7 @@ task PlatyPS {
 }
 
 
-task . { $Script:environment = "Dev"}, Build
+task . { $Script:environment = "Dev" }, Build
 task Install { $Script:environment = "Install"; $Script:pwshModuleFolder = Join-Path $sourceFolder "pwsh_modules" }, CleanPwshModule, DownloadDependencies
 task Build CleanOutput, CopyModuleManifest, AssembleModule, AssembleTypes, AssembleFormat, DownloadDependencies, BumpBuildNumber, UpdateModuleManifest
 task Publish PublishInternalNexus

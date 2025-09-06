@@ -1,29 +1,29 @@
 Function Set-OktaUserPassword {
-    [CmdletBinding(DefaultParameterSetName="PasswordChange")]
+    [CmdletBinding(DefaultParameterSetName = "PasswordChange")]
     param (
-        [Parameter(ParameterSetName="PasswordChange", Position=0, ValueFromPipeline, Mandatory)]
-        [Parameter(ParameterSetName="PasswordReset", Position=0, ValueFromPipeline, Mandatory)]
+        [Parameter(ParameterSetName = "PasswordChange", Position = 0, ValueFromPipeline, Mandatory)]
+        [Parameter(ParameterSetName = "PasswordReset", Position = 0, ValueFromPipeline, Mandatory)]
         [OktaUser]
         $Identity,
 
-        [Parameter(ParameterSetName="PasswordChange", Mandatory)]
+        [Parameter(ParameterSetName = "PasswordChange", Mandatory)]
         [SecureString]
         $OldPassword,
 
-        [Parameter(ParameterSetName="PasswordChange", Mandatory)]
+        [Parameter(ParameterSetName = "PasswordChange", Mandatory)]
         [SecureString]
         $NewPassword,
 
-        [Parameter(ParameterSetName="PasswordReset", Mandatory)]
+        [Parameter(ParameterSetName = "PasswordReset", Mandatory)]
         [Switch]
         $Reset,
 
-        [Parameter(ParameterSetName="PasswordReset")]
+        [Parameter(ParameterSetName = "PasswordReset")]
         [Switch]
         $AsPlainText
     )
 
-    switch($PSCmdlet.ParameterSetName) {
+    switch ($PSCmdlet.ParameterSetName) {
         "PasswordChange" { 
             $null = Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/users/$($Identity.id)/credentials/change_password" -Body @{
                 "oldPassword" = @{ "value" = (ConvertFrom-SecureString $OldPassword -AsPlainText) }
@@ -34,9 +34,10 @@ Function Set-OktaUserPassword {
         }
 
         "PasswordReset" {
-            If($AsPlainText) {
+            If ($AsPlainText) {
                 $tempPassword = Reset-OktaUserPassword -Identity $Identity -AsPlainText
-            } else {
+            }
+            else {
                 $tempPassword = Reset-OktaUserPassword -Identity $Identity
             }
     

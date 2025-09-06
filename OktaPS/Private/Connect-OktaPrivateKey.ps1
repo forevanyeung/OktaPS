@@ -32,10 +32,10 @@ Function Connect-OktaPrivateKey {
 
     # Get an limited lifetime access token
     $auth = Invoke-RestMethod -Method "POST" -Uri $OAuthUrl -Body @{
-        "grant_type" = "client_credentials"
-        "scope" = $Scopes -join " "
+        "grant_type"            = "client_credentials"
+        "scope"                 = $Scopes -join " "
         "client_assertion_type" = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-        "client_assertion" = $jwt
+        "client_assertion"      = $jwt
     }
 
     Set-OktaAuthentication -AuthorizationMode "PrivateKey" -Domain $OktaDomain -ClientId $ClientId -Token $auth.access_token -RefreshToken $auth.refresh_token -ExpiresIn $auth.expires_in

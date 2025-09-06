@@ -1,20 +1,20 @@
 Function Get-OktaUser {
-    [CmdletBinding(DefaultParameterSetName='AllUsers')]
+    [CmdletBinding(DefaultParameterSetName = 'AllUsers')]
     [OutputType("OktaUser")]
     param (
-        [Parameter(ParameterSetName = 'GetUser', Mandatory, Position=0, HelpMessage="Okta user ID, login, or short-login")]
+        [Parameter(ParameterSetName = 'GetUser', Mandatory, Position = 0, HelpMessage = "Okta user ID, login, or short-login")]
         [String[]]
         $Identity,
 
-        [Parameter(ParameterSetName = 'ListUserFilter', Mandatory, HelpMessage="Okta API filter criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter")]
+        [Parameter(ParameterSetName = 'ListUserFilter', Mandatory, HelpMessage = "Okta API filter criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-a-filter")]
         [String]
         $Filter,
 
-        [Parameter(ParameterSetName = 'ListUserSearch', Mandatory, HelpMessage="Okta API search criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-search")]
+        [Parameter(ParameterSetName = 'ListUserSearch', Mandatory, HelpMessage = "Okta API search criteria. https://developer.okta.com/docs/reference/api/users/#list-users-with-search")]
         [String]
         $Search,
 
-        [Parameter(ParameterSetName = 'ListUserFind', Mandatory, HelpMessage="Okta API search criteria. https://developer.okta.com/docs/reference/api/users/#find-users")]
+        [Parameter(ParameterSetName = 'ListUserFind', Mandatory, HelpMessage = "Okta API search criteria. https://developer.okta.com/docs/reference/api/users/#find-users")]
         [String]
         $Find,
 
@@ -41,9 +41,10 @@ Function Get-OktaUser {
     # by default Okta sends over all properties, so selecting only a subset of properties does not 
     # have any performance gains of network bandwidth. can implement it in the future for memory 
     # saving
-    If($Properties -eq "*") {
+    If ($Properties -eq "*") {
         $groups_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$Identity/groups"
-    } else {
+    }
+    else {
         # less expensive request?
         # https://developer.okta.com/docs/reference/api/users/#content-type-header-fields
         $request_args['Headers'] = @{ "Content-Type" = "application/json; okta-response=omitCredentials,omitCredentialsLinks,omitTransitioningToStatus" }
@@ -51,16 +52,16 @@ Function Get-OktaUser {
 
     switch ($PsCmdlet.ParameterSetName) {
         "GetUser" { 
-            $user_query = Foreach($i in $Identity) {
+            $user_query = Foreach ($i in $Identity) {
                 $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
 
-                If($null -eq $query) {
+                If ($null -eq $query) {
                     Write-Error "Could not find user $i"
                     Continue
                 }
 
                 $groups_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i/groups" -ErrorAction SilentlyContinue
-                If($groups_query) {
+                If ($groups_query) {
                     $query | Add-Member -MemberType NoteProperty -Name "_groups" -Value $groups_query
                 }
 
@@ -71,7 +72,7 @@ Function Get-OktaUser {
         "ListUserSearch" {
             $url_builder = @{}
             $url_builder['limit'] = $Limit
-            $url_builder['search'] = $Search.Replace("'","`"") #okta query has to be in double-quotes
+            $url_builder['search'] = $Search.Replace("'", "`"") #okta query has to be in double-quotes
             $querystring = New-HttpQueryString -QueryParameter $url_builder
     
             $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
@@ -102,7 +103,7 @@ Function Get-OktaUser {
             
             $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
 
-            If($IncludeDeprovisioned) {
+            If ($IncludeDeprovisioned) {
                 $url_builder['filter'] = 'status eq "DEPROVISIONED"'
                 $querystring = New-HttpQueryString -QueryParameter $url_builder
 
@@ -113,7 +114,7 @@ Function Get-OktaUser {
     
     # Return $user_query
  
-    If($null -ne $user_query) {
+    If ($null -ne $user_query) {
         $OktaUser = ConvertTo-OktaUser -InputObject $user_query
         Return $OktaUser
     }

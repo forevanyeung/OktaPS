@@ -16,7 +16,7 @@ Function New-OktaGroup {
         }
     }
 
-    If($Description) {
+    If ($Description) {
         $reqBody['profile']['description'] = $Description
     }
 

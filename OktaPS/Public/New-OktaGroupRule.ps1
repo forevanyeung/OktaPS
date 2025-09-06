@@ -1,7 +1,7 @@
 Function New-OktaGroupRule {
     [CmdletBinding()]
     param (
-        [ValidateLength(1,50)]
+        [ValidateLength(1, 50)]
         [Parameter(Mandatory)]
         [string]
         $Name,
@@ -23,8 +23,8 @@ Function New-OktaGroupRule {
     )
 
     $newRule = Invoke-OktaRequest -Method "POST" -Endpoint "api/v1/groups/rules" -Body @{
-        "type" = "group_rule"
-        "name" = $Name
+        "type"       = "group_rule"
+        "name"       = $Name
         "conditions" = @{
             # "people": {
             #     "users": {
@@ -37,24 +37,25 @@ Function New-OktaGroupRule {
             #     }
             # },
             "expression" = @{
-                "value" = $Expression.Replace("'","`"") #expression has to be in double-quotes
-                "type" = "urn:okta:expression:1.0"
+                "value" = $Expression.Replace("'", "`"") #expression has to be in double-quotes
+                "type"  = "urn:okta:expression:1.0"
             }
         }
-        "actions" = @{
+        "actions"    = @{
             "assignUserToGroups" = @{
                 "groupIds" = $Group
             }
         }
     }
 
-    If($Activate) {
+    If ($Activate) {
         $ruleId = $newRule.Id
         $activatedRule = Enable-OktaGroupRule -Rule $ruleId
         # $activatedRule = Invoke-OktaRequest -Method "POST" -Endpoint "/api/v1/groups/rules/${ruleId}/lifecycle/activate"
 
         Return $activatedRule
-    } else {
+    }
+    else {
         Return $newRule
     }
 }

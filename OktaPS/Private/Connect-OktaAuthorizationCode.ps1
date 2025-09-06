@@ -26,15 +26,15 @@ Function Connect-OktaAuthorizationCode {
     $state = Get-Random
 
     $authorizeQuery = New-HttpQueryString -QueryParameter @{
-        client_id = $ClientId
-        response_type = "code"
+        client_id             = $ClientId
+        response_type         = "code"
         code_challenge_method = "S256"
-        code_challenge = $pkce.code_challenge
-        redirect_uri = "http://localhost:$Port/login/callback"
-        scope = $Scopes -join " "
-        state = $state
+        code_challenge        = $pkce.code_challenge
+        redirect_uri          = "http://localhost:$Port/login/callback"
+        scope                 = $Scopes -join " "
+        state                 = $state
     }
-    $authorizeUri = $authorization_endpoint + "?"  +$authorizeQuery
+    $authorizeUri = $authorization_endpoint + "?" + $authorizeQuery
 
     # Start the HTTP listener in a background job
     $job = Start-Job -ScriptBlock ${Function:Start-OktaOAuthCallback} -ArgumentList $Port
@@ -46,17 +46,17 @@ Function Connect-OktaAuthorizationCode {
     $jobResult = Receive-Job -Job $job -Wait -AutoRemoveJob
 
     # Verify state
-    If( "state" -notin $jobResult.Keys -or $jobResult.state -ne $state ) {
+    If ( "state" -notin $jobResult.Keys -or $jobResult.state -ne $state ) {
         Write-Error "State mismatch. Expected: $state, Received: $($jobResult.state)"
         Return
     }
 
     # Exchange an Authorization Code for a token
     $auth = Invoke-RestMethod -Method POST -Uri $token_endpoint -Body @{
-        client_id = $ClientId
-        grant_type = "authorization_code"
-        code = $jobResult.code
-        redirect_uri = "http://localhost:$Port/login/callback"
+        client_id     = $ClientId
+        grant_type    = "authorization_code"
+        code          = $jobResult.code
+        redirect_uri  = "http://localhost:$Port/login/callback"
         code_verifier = $pkce.code_verifier
     }
 

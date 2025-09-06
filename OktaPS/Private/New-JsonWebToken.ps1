@@ -53,7 +53,7 @@ function New-JsonWebToken {
             "SHA512" = "RS512"
         }
 
-        $header = [ordered]@{typ = "JWT"; alg = $rsaAlg[$HashAlgorithm] ?? "RS256"} | ConvertTo-JwtPart
+        $header = [ordered]@{typ = "JWT"; alg = $rsaAlg[$HashAlgorithm] ?? "RS256" } | ConvertTo-JwtPart
 
         #2. Construct payload for RSA:
         $payload = New-JwtPayloadString -Claims $Claims
@@ -63,14 +63,12 @@ function New-JsonWebToken {
 
         #4. Generate signature for concatenated header and payload:
         [string]$rsaSig = ""
-        try 
-        {
+        try {
             $rsaSig = New-JwtRsaSignature -JsonWebToken $jwtSansSig -HashAlgorithm $HashAlgorithm -PrivateKey $PrivateKey
 
             # $rsaSig = New-JwtSignature -JsonWebToken $jwtSansSig -HashAlgorithm $HashAlgorithm -SigningCertificate $SigningCertificate
         }
-        catch 
-        {
+        catch {
             $cryptographicExceptionMessage = $_.Exception.Message
             $CryptographicException = New-Object -TypeName System.Security.Cryptography.CryptographicException -ArgumentList $cryptographicExceptionMessage
             Write-Error -Exception $CryptographicException -Category SecurityError -ErrorAction Stop
@@ -85,22 +83,20 @@ function New-JsonWebToken {
     }
 }
 
-function New-JwtPayloadString
-{
+function New-JwtPayloadString {
     [CmdletBinding()]
     [OutputType([System.String])]
     Param
     (
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   Position=0)][HashTable]$Claims,
+        [Parameter(Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true,
+            Position = 0)][HashTable]$Claims,
 
-        [Parameter(Mandatory=$false,Position=1)]
-        [ValidateRange(1,300)]
+        [Parameter(Mandatory = $false, Position = 1)]
+        [ValidateRange(1, 300)]
         [System.Int32]$NotBeforeSkew
     )
-    PROCESS
-    {
+    PROCESS {
         [string]$payload = ""
 
         $_claims = [ordered]@{}
@@ -109,8 +105,7 @@ function New-JwtPayloadString
         $currentEpochTime = Convert-DateTimeToEpoch -DateTime $now
 
         $notBefore = $currentEpochTime
-        if ($PSBoundParameters.ContainsKey("NotBeforeSkew"))
-        {
+        if ($PSBoundParameters.ContainsKey("NotBeforeSkew")) {
             $notBefore = Convert-DateTimeToEpoch -DateTime ($now.AddSeconds(-$NotBeforeSkew))
         }
 
@@ -120,10 +115,8 @@ function New-JwtPayloadString
         $_claims.Add("nbf", $notBefore)
         $_claims.Add("exp", $futureEpochTime)
 
-        foreach ($entry in $Claims.GetEnumerator())
-        {
-            if (-not($_claims.Contains($entry.Key)))
-            {
+        foreach ($entry in $Claims.GetEnumerator()) {
+            if (-not($_claims.Contains($entry.Key))) {
                 $_claims.Add($entry.Key, $entry.Value)
             }
         }
@@ -134,8 +127,7 @@ function New-JwtPayloadString
     }
 }
 
-function Convert-DateTimeToEpoch
-{
+function Convert-DateTimeToEpoch {
     <#
     .SYNOPSIS
         Converts a System.DateTime to an epoch (unix) time stamp.
@@ -168,13 +160,12 @@ function Convert-DateTimeToEpoch
     [OutputType([System.Int64])]
     Param
     (
-        [Parameter(Mandatory=$false,
-                   ValueFromPipeline=$true,
-                   Position=0)][ValidateNotNullOrEmpty()][Alias("Date")][DateTime]$DateTime=(Get-Date)
+        [Parameter(Mandatory = $false,
+            ValueFromPipeline = $true,
+            Position = 0)][ValidateNotNullOrEmpty()][Alias("Date")][DateTime]$DateTime = (Get-Date)
     )
 
-    PROCESS
-    {
+    PROCESS {
         $dtut = $DateTime.ToUniversalTime()
 
         [TimeSpan]$ts = New-TimeSpan -Start  (Get-Date "01/01/1970") -End $dtut
@@ -185,8 +176,7 @@ function Convert-DateTimeToEpoch
     }
 }
 
-function ConvertTo-JwtPart
-{
+function ConvertTo-JwtPart {
     <#
     .SYNOPSIS
         Converts an object to a base 64 URL encoded compressed JSON string.
@@ -245,43 +235,38 @@ function ConvertTo-JwtPart
     }
 }
 
-Function New-JwtRsaSignature
-{
+Function New-JwtRsaSignature {
     [CmdletBinding()]
     [OutputType([string])]
     param
     (
-        [Parameter(Mandatory=$true,ValueFromPipeline=$false,Position=0)]
-        [ValidateLength(16,131072)][Alias("JWT", "Token")][String]$JsonWebToken,
+        [Parameter(Mandatory = $true, ValueFromPipeline = $false, Position = 0)]
+        [ValidateLength(16, 131072)][Alias("JWT", "Token")][String]$JsonWebToken,
 
-        [Parameter(Position=1,Mandatory=$true)]
-        [ValidateSet("SHA256","SHA384","SHA512")]
+        [Parameter(Position = 1, Mandatory = $true)]
+        [ValidateSet("SHA256", "SHA384", "SHA512")]
         [String]$HashAlgorithm,
 
-        [Parameter(Mandatory=$true,Position=2)]
+        [Parameter(Mandatory = $true, Position = 2)]
         [String]$PrivateKey
     )
 
-    BEGIN
-    {
+    BEGIN {
         $decodeExceptionMessage = "Unable to decode JWT."
         $ArgumentException = New-Object -TypeName ArgumentException -ArgumentList $decodeExceptionMessage
     }
 
-    PROCESS
-    {
+    PROCESS {
         [string]$stringSig = ""
 
         # Test JWT structure:
         [bool]$isValidJwt = Test-JwtStructure -JsonWebToken $JsonWebToken
-        if (-not($isValidJwt))
-        {
+        if (-not($isValidJwt)) {
             Write-Error -Exception $ArgumentException -Category InvalidArgument -ErrorAction Stop
         }
 
         # JWT should only have 2 parts right now:
-        if (($JsonWebToken.Split(".").Count) -ne 2)
-        {
+        if (($JsonWebToken.Split(".").Count) -ne 2) {
             Write-Error -Exception $ArgumentException -Category InvalidArgument -ErrorAction Stop
         }
 
@@ -310,28 +295,23 @@ Function New-JwtRsaSignature
         [byte[]]$messageDigest = $null
 
         # Create a SHA256, SHA384 or SHA512 hash and assign it to the messageDigest variable:
-        switch ($HashAlgorithm)
-        {
-            "SHA256"
-            {
+        switch ($HashAlgorithm) {
+            "SHA256" {
                 $shaAlg = [System.Security.Cryptography.SHA256]::Create()
                 $messageDigest = $shaAlg.ComputeHash($message)
                 break
             }
-            "SHA384"
-            {
+            "SHA384" {
                 $shaAlg = [System.Security.Cryptography.SHA384]::Create()
                 $messageDigest = $shaAlg.ComputeHash($message)
                 break
             }
-            "SHA512"
-            {
+            "SHA512" {
                 $shaAlg = [System.Security.Cryptography.SHA512]::Create()
                 $messageDigest = $shaAlg.ComputeHash($message)
                 break
             }
-            default
-            {
+            default {
                 $shaAlg = [System.Security.Cryptography.SHA512]::Create()
                 $messageDigest = $shaAlg.ComputeHash($message)
                 break
@@ -340,12 +320,10 @@ Function New-JwtRsaSignature
 
         # Create the signature:
         [byte[]]$sigBytes = $null
-        try
-        {
+        try {
             $sigBytes = $rsaSigFormatter.CreateSignature($messageDigest)
         }
-        catch
-        {
+        catch {
             $signingErrorMessage = "Unable to sign $JsonWebToken  with certificate with thumbprint {0}. Ensure that CSP for this certificate is 'Microsoft Enhanced RSA and AES Cryptographic Provider' and try again. Additional error info: {1}" -f $thumbprint, $_.Exception.Message
             Write-Error -Exception ([CryptographicException]::new($signingErrorMessage)) -Category SecurityError -ErrorAction Stop
         }
@@ -357,8 +335,7 @@ Function New-JwtRsaSignature
     }
 }
 
-function Test-JwtStructure 
-{
+function Test-JwtStructure {
     <#
     .SYNOPSIS
         Tests a JWT for structural validity.
@@ -472,9 +449,8 @@ function Test-JwtStructure
     }
 }
 
-function ConvertFrom-Base64UrlEncodedString
-{
-<#
+function ConvertFrom-Base64UrlEncodedString {
+    <#
     .SYNOPSIS
         Decodes a base 64 URL encoded string.
     .DESCRIPTION
@@ -503,28 +479,24 @@ function ConvertFrom-Base64UrlEncodedString
     [OutputType([System.String], [System.Byte[]])]
     [Alias('b64d', 'Decode')]
     param (
-        [Parameter(Position=0,Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [string]$InputString,
 
-        [Parameter(Position=1,Mandatory=$false,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false)]
+        [Parameter(Position = 1, Mandatory = $false, ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false)]
         [switch]$AsBytes
     )
 
-    BEGIN
-    {
+    BEGIN {
         $argumentExceptionMessage = "The input is not a valid Base-64 string as it contains a non-base 64 character, more than two padding characters, or an illegal character among the padding characters."
         $ArgumentException = New-Object -TypeName System.ArgumentException -ArgumentList $argumentExceptionMessage
     }
-    PROCESS
-    {
-        try
-        {
+    PROCESS {
+        try {
             $output = $InputString
             $output = $output.Replace('-', '+') # 62nd char of encoding
             $output = $output.Replace('_', '/') # 63rd char of encoding
 
-            switch ($output.Length % 4) # Pad with trailing '='s
-            {
+            switch ($output.Length % 4) { # Pad with trailing '='s
                 0 { break }# No pad chars in this case
                 2 { $output += "=="; break } # Two pad chars
                 3 { $output += "="; break } # One pad char
@@ -533,27 +505,23 @@ function ConvertFrom-Base64UrlEncodedString
 
             # Byte array conversion:
             [byte[]]$convertedBytes = [Convert]::FromBase64String($output)
-            if ($PSBoundParameters.ContainsKey("AsBytes"))
-            {
+            if ($PSBoundParameters.ContainsKey("AsBytes")) {
                 return $convertedBytes
             }
-            else
-            {
+            else {
                 # String to be returned:
                 $decodedString = [System.Text.Encoding]::ASCII.GetString($convertedBytes)
                 return $decodedString
             }
         }
-        catch
-        {
+        catch {
             Write-Error -Exception $ArgumentException -Category InvalidArgument -ErrorAction Stop
         }
     }
 }
 
-function ConvertTo-Base64UrlEncodedString
-{
-<#
+function ConvertTo-Base64UrlEncodedString {
+    <#
     .SYNOPSIS
         Base 64 URL encodes an input string.
     .DESCRIPTION
@@ -583,21 +551,18 @@ function ConvertTo-Base64UrlEncodedString
     [Alias('b64e', 'Encode')]
     [OutputType([System.String])]
     param (
-        [Parameter(Position=0,ParameterSetName="String",Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Position = 0, ParameterSetName = "String", Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [string]$InputString,
 
-        [Parameter(Position=1,ParameterSetName="Byte Array",Mandatory=$false,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false)]
+        [Parameter(Position = 1, ParameterSetName = "Byte Array", Mandatory = $false, ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false)]
         [byte[]]$Bytes
     )
 
-    PROCESS
-    {
+    PROCESS {
         [string]$base64UrlEncodedString = ""
 
-        if ($PSBoundParameters.ContainsKey("Bytes"))
-        {
-            try
-            {
+        if ($PSBoundParameters.ContainsKey("Bytes")) {
+            try {
 
                 $output = [Convert]::ToBase64String($Bytes)
                 $output = $output.Split('=')[0] # Remove any trailing '='s
@@ -606,16 +571,13 @@ function ConvertTo-Base64UrlEncodedString
 
                 $base64UrlEncodedString = $output
             }
-            catch
-            {
+            catch {
                 $ArgumentException = New-Object -TypeName System.ArgumentException -ArgumentList $_.Exception.Message
                 Write-Error -Exception $ArgumentException -Category InvalidArgument -ErrorAction Stop
             }
         }
-        else
-        {
-            try
-            {
+        else {
+            try {
                 $encoder = [System.Text.UTF8Encoding]::new()
 
                 [byte[]]$inputBytes = $encoder.GetBytes($InputString)
@@ -627,8 +589,7 @@ function ConvertTo-Base64UrlEncodedString
                 $base64UrlEncodedString = $base64UrlEncodedString.Replace('+', '-'); # 62nd char of encoding
                 $base64UrlEncodedString = $base64UrlEncodedString.Replace('/', '_'); # 63rd char of encoding
             }
-            catch
-            {
+            catch {
                 $ArgumentException = New-Object -TypeName System.ArgumentException -ArgumentList $_.Exception.Message
                 Write-Error -Exception $ArgumentException -Category InvalidArgument -ErrorAction Stop
             }

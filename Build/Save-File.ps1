@@ -29,17 +29,18 @@ Function Save-File {
 
         if ($response.IsSuccessStatusCode) {
             # check content-type to make sure we're downloading the right file
-            If($SkipContentTypeCheck -eq $false) {
-                If($response.Content.Headers.ContentType.MediaType -notlike "application/*") {
+            If ($SkipContentTypeCheck -eq $false) {
+                If ($response.Content.Headers.ContentType.MediaType -notlike "application/*") {
                     Write-Host "Did not detect an application in Content-Type, skipping download"
                     Throw
                 }
             }
 
             # get filename from Content-Disposition header
-            If($response.Content.Headers.Key -contains "Content-Disposition") {
+            If ($response.Content.Headers.Key -contains "Content-Disposition") {
                 $filename = $response.Content.Headers.ContentDisposition.FileName
-            } else {
+            }
+            else {
                 $fUri = $response.RequestMessage.RequestUri
                 $filename = [System.IO.Path]::GetFileName($fUri.LocalPath)
             }
@@ -61,7 +62,8 @@ Function Save-File {
                 throw $copyStreamOp.Exception
             }
         }
-    } else {
+    }
+    else {
         Write-Error "Download failed"
     }
 

@@ -20,40 +20,40 @@ Function Get-OktaLogs {
         Get logs for a specific user
     #>
 
-    [CmdletBinding(DefaultParameterSetName="ByFilter")]
+    [CmdletBinding(DefaultParameterSetName = "ByFilter")]
     param (
         # Filters the lower time bound of the log events published property for bounded queries or persistence time for polling queries
-        [Parameter(ParameterSetName="ByFilter")]
-        [Parameter(ParameterSetName="ByUser")]
+        [Parameter(ParameterSetName = "ByFilter")]
+        [Parameter(ParameterSetName = "ByUser")]
         [datetime]
         $Since = (Get-Date).AddMinutes(-15),
 
         # Filters the upper time bound of the log events published property for bounded queries or persistence time for polling queries
-        [Parameter(ParameterSetName="ByFilter")]
-        [Parameter(ParameterSetName="ByUser")]
+        [Parameter(ParameterSetName = "ByFilter")]
+        [Parameter(ParameterSetName = "ByUser")]
         [datetime]
         $Until = (Get-Date),
 
         # Filter Expression that filters the results
-        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName = "ByFilter")]
         [String]
         $Filter,
 
         # Filters the log events results by one or more exact keywords
-        [Parameter(ParameterSetName="ByFilter")]
+        [Parameter(ParameterSetName = "ByFilter")]
         [String]
         $Keyword,
 
         # The order of the returned events that are sorted by published
-        [Parameter(ParameterSetName="ByFilter")]
-        [Parameter(ParameterSetName="ByUser")]
+        [Parameter(ParameterSetName = "ByFilter")]
+        [Parameter(ParameterSetName = "ByUser")]
         [ValidateSet("ASCENDING", "DESCENDING")]
         [String]
         $Sort = "ASCENDING",
 
         # Sets the number of results that are returned in the response
-        [Parameter(ParameterSetName="ByFilter")]
-        [Parameter(ParameterSetName="ByUser")]
+        [Parameter(ParameterSetName = "ByFilter")]
+        [Parameter(ParameterSetName = "ByUser")]
         [int]
         $Limit = 1000,
 
@@ -63,24 +63,24 @@ Function Get-OktaLogs {
         # $NoColor,
 
         # Get logs for a specific user, cannot be combined with the Filter parameter
-        [Parameter(ParameterSetName="ByUser", ValueFromPipeline)]
+        [Parameter(ParameterSetName = "ByUser", ValueFromPipeline)]
         [PSTypeName("OktaUser")]
         $OktaUser
     )
 
-    Switch($PSCmdlet.ParameterSetName) {
+    Switch ($PSCmdlet.ParameterSetName) {
         "ByUser" {
             $Filter = "actor.id eq ""$($OktaUser.id)"" or target.id eq ""$($OktaUser.id)"""
         }
     }
     
     $query = @{
-        since = $Since.ToString("o")
-        until = $Until.ToString("o")
-        filter = $Filter
-        q = $Keyword
+        since     = $Since.ToString("o")
+        until     = $Until.ToString("o")
+        filter    = $Filter
+        q         = $Keyword
         sortOrder = $Sort
-        limit = $Limit
+        limit     = $Limit
     }
 
     $response = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/logs" -Query $query

@@ -12,13 +12,13 @@ Function Connect-OktaCredential {
     )
 
     $okta_authn = Invoke-RestMethod -Uri "$OktaDomain/api/v1/authn" -Method "POST" -Body (@{
-        "username" = $Credential.GetNetworkCredential().username
-        "password" = $Credential.GetNetworkCredential().password
-        "option" = @{
-            "multiOptionalFactorEnroll" = "false"
-            "warnBeforePasswordExpired" = "false"
-        }
-    } | ConvertTo-Json) -ContentType "application/json" -SessionVariable OktaSSO
+            "username" = $Credential.GetNetworkCredential().username
+            "password" = $Credential.GetNetworkCredential().password
+            "option"   = @{
+                "multiOptionalFactorEnroll" = "false"
+                "warnBeforePasswordExpired" = "false"
+            }
+        } | ConvertTo-Json) -ContentType "application/json" -SessionVariable OktaSSO
 
     switch ($okta_authn.status) {
         SUCCESS { 
@@ -31,10 +31,11 @@ Function Connect-OktaCredential {
             # if more than one mfa, prompt, or select the first one
             # https://developer.okta.com/docs/reference/api/factors/#supported-factors-for-providers
             $factorList = $okta_authn._embedded.factors
-            If($factorList.count -gt 1) {
+            If ($factorList.count -gt 1) {
                 $availableFactors = $factorList | ForEach-Object { $_.provider.ToLower() + "::" + $_.factorType }
                 $chosenFactorIndex = Read-OktaFactorPrompt -AvailableFactors $availableFactors
-            } else {
+            }
+            else {
                 $chosenFactorIndex = 0
             }
             $chosenFactor = $factorList[$chosenFactorIndex].provider.ToLower() + "::" + $factorList[$chosenFactorIndex].factorType
@@ -73,13 +74,15 @@ Function Connect-OktaCredential {
     # 
     $OktaAdminDomain = Get-OktaAdminDomain -Domain $OktaDomain
     $dashboard = Invoke-WebRequest -Method "GET" -Uri "$OktaAdminDomain/admin/dashboard" -WebSession $OktaSSO
-    If($dashboard.content -match '(?:id="_xsrfToken".*?>)(?<xsrfToken>.*?)(?:<)') {
-        If($Matches.xsrfToken.Length -gt 0) {
+    If ($dashboard.content -match '(?:id="_xsrfToken".*?>)(?<xsrfToken>.*?)(?:<)') {
+        If ($Matches.xsrfToken.Length -gt 0) {
             $Script:OktaXSRF = $Matches.xsrfToken
-        } else {
+        }
+        else {
             Write-Warning "XSRF token length is 0. Some Okta endpoints might not be available."
         }
-    } else {
+    }
+    else {
         Write-Warning "Unable to get XSRF token. Some Okta endpoints might not be available."
     }
 

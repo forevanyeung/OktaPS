@@ -18,7 +18,8 @@ Function Connect-OktaAPI {
     # test API key is valid
     Try {
         $null = Invoke-WebRequest -Uri "$OktaDomain/api/v1/users/me" -Method "GET" -WebSession $OktaSSO
-    } Catch {
+    }
+    Catch {
         throw
     }
 

@@ -10,22 +10,22 @@ Function Read-OktaFactorPrompt {
 
     $title = "Verify it's you with a security method"
     $question = "Select from the following options"
-    $choices = @(Foreach($f in $AvailableFactors) {
-        Switch($f) {
-            "duo::web" {
-                [System.Management.Automation.Host.ChoiceDescription]::new("&Duo Security", "Get a push notification from Duo")
+    $choices = @(Foreach ($f in $AvailableFactors) {
+            Switch ($f) {
+                "duo::web" {
+                    [System.Management.Automation.Host.ChoiceDescription]::new("&Duo Security", "Get a push notification from Duo")
+                }
+                "okta::push" {
+                    [System.Management.Automation.Host.ChoiceDescription]::new("&Okta Verify Push", "Get a push notification from Okta Verify")
+                }
+                "okta::token:software:totp" {
+                    [System.Management.Automation.Host.ChoiceDescription]::new("Okta Verify &Code", "Enter a code from Okta Verify")
+                }
+                Default {
+                    Write-Error "Unknown factor type: $f"
+                }
             }
-            "okta::push" {
-                [System.Management.Automation.Host.ChoiceDescription]::new("&Okta Verify Push", "Get a push notification from Okta Verify")
-            }
-            "okta::token:software:totp" {
-                [System.Management.Automation.Host.ChoiceDescription]::new("Okta Verify &Code", "Enter a code from Okta Verify")
-            }
-            Default {
-                Write-Error "Unknown factor type: $f"
-            }
-        }
-    })
+        })
 
     $index = $host.ui.PromptForChoice($title, $question, $choices, 0)
 

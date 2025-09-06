@@ -16,6 +16,6 @@ Function Revoke-OktaOAuthToken {
 
     Invoke-WebRequest -Method "POST" -Uri "$OktaDomain/oauth2/v1/revoke" -Body @{
         client_id = $ClientId
-        token = $Token
+        token     = $Token
     }
 }

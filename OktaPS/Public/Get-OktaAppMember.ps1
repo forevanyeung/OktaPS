@@ -1,16 +1,16 @@
 Function Get-OktaAppMember {
     [CmdletBinding()]
     param (
-        [Parameter(ParameterSetName="ByAppId", Mandatory)]
+        [Parameter(ParameterSetName = "ByAppId", Mandatory)]
         [String]
         $App,
 
-        [Parameter(ParameterSetName="ByOktaApp", ValueFromPipeline, Mandatory)]
+        [Parameter(ParameterSetName = "ByOktaApp", ValueFromPipeline, Mandatory)]
         [PSTypeName("Okta.App")]
         $InputObject
     )
 
-    If($PSCmdlet.ParameterSetName -eq "ByAppId") {
+    If ($PSCmdlet.ParameterSetName -eq "ByAppId") {
         $OktaApp = Get-OktaApp -App $App
     }
 

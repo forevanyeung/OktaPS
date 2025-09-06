@@ -1,17 +1,18 @@
 Function Set-OktaConfig {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $Path,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $Config
     )
 
-    If(Test-Path $Path) {
+    If (Test-Path $Path) {
         Write-Warning "Okta config file already exists at $Path, would you like to overwrite it?" -WarningAction Inquire
-    } else {
+    }
+    else {
         $null = New-Item -ItemType File -Path $Path -Force
     }
 

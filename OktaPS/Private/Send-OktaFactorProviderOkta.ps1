@@ -1,11 +1,11 @@
 Function Send-OktaFactorProviderOkta {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $VerifyUrl,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $StateToken,
 
@@ -17,13 +17,13 @@ Function Send-OktaFactorProviderOkta {
     # Verify request body, add the passcode if it's provided
     # create it outside of the loop since it is only set once
     $req_body = @{ "stateToken" = $StateToken }
-    If($Passcode) {
+    If ($Passcode) {
         $req_body["passCode"] = $Passcode
     }
 
     $status = ""
-    while($status -ne "SUCCESS") {
-        switch($status) {
+    while ($status -ne "SUCCESS") {
+        switch ($status) {
             "CANCELLED" {
                 Write-Warning "Push notification cancelled"
                 Return

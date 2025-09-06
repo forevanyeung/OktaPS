@@ -7,10 +7,11 @@ Function ConvertTo-OktaGroup {
     )
 
     Process {
-        foreach($OktaGroup in $InputObject) {
+        foreach ($OktaGroup in $InputObject) {
             try {
                 $OktaGroupObject = [OktaGroup]$OktaGroup
-            } catch {
+            }
+            catch {
                 throw [System.ArgumentException] "Invalid input object. Could not create OktaGroup object."
             }
 
@@ -20,9 +21,10 @@ Function ConvertTo-OktaGroup {
             $properties = $OktaGroupObject.psobject.properties.name
             $attributes = $OktaGroup.profile.psobject.properties
             $attributes | Foreach-Object { 
-                If($_.Name -in $properties) {
+                If ($_.Name -in $properties) {
                     $groupProfile["profile_$($_.Name)"] = $_.Value
-                } else {
+                }
+                else {
                     $groupProfile[$_.Name] = $_.Value
                 }
             }

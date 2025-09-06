@@ -8,7 +8,7 @@ Function ConvertTo-OktaUser {
     )
 
     Process {
-        foreach($OktaUser in $InputObject) {
+        foreach ($OktaUser in $InputObject) {
             try {
                 $OktaUserObject = [OktaUser]::new(
                     $OktaUser.id,
@@ -24,7 +24,8 @@ Function ConvertTo-OktaUser {
                     ($OktaUser.passwordChanged ?? [DateTime]::MinValue)
                     # $OktaUser.type
                 )
-            } catch {
+            }
+            catch {
                 throw [System.ArgumentException] "Invalid input object. Could not create OktaUser object."
             }
 
@@ -33,11 +34,12 @@ Function ConvertTo-OktaUser {
             # raw profile attr are also set in _profile
             $userProfile = @{}
             $properties = $OktaUserObject.psobject.properties.name
-            $attributes = $OktaUser.profile.psobject.properties | Where-Object { $_.name -notin @("firstName", "lastName", "login")}
-            $attributes| Foreach-Object { 
-                If($_.Name -in $properties) {
+            $attributes = $OktaUser.profile.psobject.properties | Where-Object { $_.name -notin @("firstName", "lastName", "login") }
+            $attributes | Foreach-Object { 
+                If ($_.Name -in $properties) {
                     $userProfile["profile_$($_.Name)"] = $_.Value
-                } else {
+                }
+                else {
                     $userProfile[$_.Name] = $_.Value
                 }
             }

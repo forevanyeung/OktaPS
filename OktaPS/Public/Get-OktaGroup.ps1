@@ -1,23 +1,23 @@
 Function Get-OktaGroup {
-    [CmdletBinding(DefaultParameterSetName='AllGroups')]
+    [CmdletBinding(DefaultParameterSetName = 'AllGroups')]
     param (
         # Specifies an ID or name of an Okta group to retrieve. If searching by ID, it must be an exact match and only 
         # one result will be returned. If searching by name, it will conduct a starts with query, and if multiple matches
         # all groups will be returned.
-        [Parameter(ParameterSetName="GetGroup", Mandatory=$true, Position=0)]
+        [Parameter(ParameterSetName = "GetGroup", Mandatory = $true, Position = 0)]
         [String]
         $Name,
 
         # Specifies a specific type of group to search for. If no Type is specified, the default is to search for all 
         # types. Does not apply when searching by ID.
         [Parameter()]
-        [ValidateSet("OKTA_GROUP","APP_GROUP","BUILT_IN")]
+        [ValidateSet("OKTA_GROUP", "APP_GROUP", "BUILT_IN")]
         [String]
         $Type, 
 
         # Specifies the number of Group results in a page
-        [Parameter(ParameterSetName="AllGroups")]
-        [Parameter(ParameterSetName="GetGroup")]
+        [Parameter(ParameterSetName = "AllGroups")]
+        [Parameter(ParameterSetName = "GetGroup")]
         [Int]
         $Limit = 10000
     )
@@ -25,7 +25,7 @@ Function Get-OktaGroup {
     $query = @{}
     $query["limit"] = $Limit
 
-    If($Type) {
+    If ($Type) {
         $query["filter"] = "type eq `"$Type`""
     } 
     
@@ -37,7 +37,7 @@ Function Get-OktaGroup {
         "GetGroup" {
             # try matching group id
             $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/$Name" -ErrorAction SilentlyContinue
-            If(-not $group) {
+            If (-not $group) {
                 # try matching group name
                 $query["q"] = $Name
                 $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups" -Query $query -ErrorAction SilentlyContinue
@@ -45,11 +45,11 @@ Function Get-OktaGroup {
         }
     }
 
-    If(-not $group) {
+    If (-not $group) {
         Throw "Group not found: $Name"
     }
 
-    $GroupObject = Foreach($g in $group) {
+    $GroupObject = Foreach ($g in $group) {
         ConvertTo-OktaGroup -InputObject $g
     }
 

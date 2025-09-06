@@ -1,10 +1,10 @@
 @{
-    Module = "OktaPS"
-    Output = "release"
-    Dependencies = @{
-        "PowerHTML" = "github:forevanyeung/PowerHTML#fix-formatdata"
+    Module          = "OktaPS"
+    Output          = "release"
+    Dependencies    = @{
+        "PowerHTML"       = "github:forevanyeung/PowerHTML#fix-formatdata"
         "powershell-yaml" = "0.4.11"
-        "PKCE" = "1.0.2"
+        "PKCE"            = "1.0.2"
     }
     DevDependencies = @{
         # "Invoke-Build" = "5.12.1"

@@ -21,7 +21,7 @@ Function New-OktaUser {
         $Activate
     )
 
-    If($Activate) {
+    If ($Activate) {
         $url_builder = @{}
         $url_builder['activate'] = $true
         $querystring = New-HttpQueryString -QueryParameter $url_builder

@@ -1,14 +1,14 @@
 Function Update-OktaAuthentication {
-    Switch($Script:OktaAuthorizationMode) {
+    Switch ($Script:OktaAuthorizationMode) {
         "AuthorizationCode" {
-            If(-not $Script:OktaOAuthRefreshToken) {
+            If (-not $Script:OktaOAuthRefreshToken) {
                 Write-Host "No refresh token found, cannot refresh token"
                 Break
             }
 
             $refresh = Invoke-RestMethod -Method "POST" -Uri "$Script:OktaDomain/oauth2/v1/token" -Body @{
-                "grant_type" = "refresh_token"
-                "client_id" = $Script:OktaOAuthClientId
+                "grant_type"    = "refresh_token"
+                "client_id"     = $Script:OktaOAuthClientId
                 "refresh_token" = ($Script:OktaOAuthRefreshToken | ConvertFrom-SecureString -AsPlainText)
             } -ContentType "application/x-www-form-urlencoded" -ErrorAction SilentlyContinue
 
@@ -23,11 +23,12 @@ Function Update-OktaAuthentication {
         "Credential" {
             try {
                 $session = Invoke-RestMethod -Method "POST" -Uri "$OktaDomain/api/v1/sessions/me/lifecycle/refresh" -WebSession $Script:OktaSSO -ContentType "application/json" -ErrorAction SilentlyContinue
-            } catch {
+            }
+            catch {
                 Write-Verbose "cached expiration expired, trying to renew session"
             }
             
-            If($session.status -eq "ACTIVE") {
+            If ($session.status -eq "ACTIVE") {
                 $Script:OktaSSOExpirationUTC = $session.expiresAt
                 Write-Verbose "session renewed, updated expiration to $Script:OktaSSOExpirationUTC UTC"
                 Break

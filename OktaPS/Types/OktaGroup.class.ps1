@@ -24,13 +24,13 @@ class OktaGroup {
     OktaGroup([object]$hashtable) {
         # $this._embedded             = $hashtable._embedded
         # $this._links                = $hashtable._links
-        $this.created               = $hashtable.created ?? [DateTime]::MinValue
-        $this.id                    = $hashtable.id
+        $this.created = $hashtable.created ?? [DateTime]::MinValue
+        $this.id = $hashtable.id
         $this.lastMembershipUpdated = $hashtable.lastMembershipUpdated ?? [DateTime]::MinValue
-        $this.lastUpdated           = $hashtable.lastUpdated ?? [DateTime]::MinValue
-        $this.objectClass           = $hashtable.objectClass
-        $this.profile               = $hashtable.profile
-        $this.type                  = $hashtable.type ?? "OKTA_GROUP"
-        $this.source                = $hashtable.source.id
+        $this.lastUpdated = $hashtable.lastUpdated ?? [DateTime]::MinValue
+        $this.objectClass = $hashtable.objectClass
+        $this.profile = $hashtable.profile
+        $this.type = $hashtable.type ?? "OKTA_GROUP"
+        $this.source = $hashtable.source.id
     }
 }

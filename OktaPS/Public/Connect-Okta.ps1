@@ -19,24 +19,24 @@ Register-ArgumentCompleter -CommandName 'Connect-Okta' -ParameterName 'Config' -
 }
 
 Function Connect-Okta {
-    [CmdletBinding(DefaultParameterSetName='SavedConfig')]
+    [CmdletBinding(DefaultParameterSetName = 'SavedConfig')]
     param (
         # Okta organization url beginning with https://
-        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory=$True)]
-        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
-        [Parameter(ParameterSetName = 'APIAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory = $True)]
+        [Parameter(ParameterSetName = 'APIAuth', Mandatory = $True)]
         [Alias("OktaDomain")]
-        [ValidatePattern("^https://", ErrorMessage="URL must begin with https://")]
+        [ValidatePattern("^https://", ErrorMessage = "URL must begin with https://")]
         [String]
         $OrgUrl,
 
         # OAuth client ID
-        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory = $True)]
         [String]
         $ClientId,
 
         # OAuth scopes
-        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory = $True)]
         [String[]]
         $Scopes,
 
@@ -46,12 +46,12 @@ Function Connect-Okta {
         $Port = 8080,
 
         # Okta admin credentials
-        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory = $True)]
         [PSCredential]
         $Credential,
 
         # Okta API key
-        [Parameter(ParameterSetName = 'APIAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'APIAuth', Mandatory = $True)]
         [String]
         $API,
 
@@ -70,19 +70,19 @@ Function Connect-Okta {
         $SavePath = (Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta\okta.yaml"),
 
         # Path to .yaml config file
-        [Parameter(ParameterSetName = 'SavedConfig', Position=0)]
+        [Parameter(ParameterSetName = 'SavedConfig', Position = 0)]
         [ArgumentCompleter({ OktaConfigPathArgumentCompleter @args })]
         [String]
         $Config
     )
 
-    Switch($PSCmdlet.ParameterSetName) {
+    Switch ($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
             # Default to authorization code method
             $AuthFlow = "AuthorizationCode"
 
             $oktaYAMLPath = Get-OktaConfig -Path $Config
-            If([String]::IsNullOrEmpty($oktaYAMLPath)) {
+            If ([String]::IsNullOrEmpty($oktaYAMLPath)) {
                 Return
             }
 
@@ -91,7 +91,7 @@ Function Connect-Okta {
             $yaml = Get-Content $oktaYAMLPath | ConvertFrom-Yaml
             $yamlConfig = $yaml.okta.client
 
-            If($yamlConfig.authorizationMode -eq "PrivateKey") {
+            If ($yamlConfig.authorizationMode -eq "PrivateKey") {
                 $AuthFlow = "PrivateKey"
 
                 $OrgUrl = $yamlConfig.orgUrl
@@ -99,30 +99,34 @@ Function Connect-Okta {
                 $Scopes = $yamlConfig.scopes
                 $PrivateKey = $yamlConfig.privateKey
 
-            } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
+            }
+            ElseIf ($yamlConfig.authorizationMode -eq "AuthorizationCode") {
                 $AuthFlow = "AuthorizationCode"
 
                 $OrgUrl = $yamlConfig.orgUrl
                 $ClientId = $yamlConfig.clientId
                 $Scopes = $yamlConfig.scopes
 
-                If($yamlConfig.port) {
+                If ($yamlConfig.port) {
                     $Port = $yamlConfig.port
                 }
     
-            } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
+            }
+            ElseIf (($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
                 $AuthFlow = "SSWS"
 
                 $OrgUrl = $yamlConfig.orgUrl
                 $API = $yamlConfig.token
     
-            } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
+            }
+            ElseIf (-not [String]::IsNullOrEmpty($yamlConfig.username)) {
                 $AuthFlow = "Credential"
 
                 $OrgUrl = $yamlConfig.orgUrl
                 $Credential = Get-Credential $yamlConfig.username
 
-            } Else {
+            }
+            Else {
                 Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
                 Write-Error "Defaulting to authorization code method"
             }
@@ -135,40 +139,41 @@ Function Connect-Okta {
 
     Clear-OktaAuthentication
     
-    Switch($AuthFlow) {
+    Switch ($AuthFlow) {
         "SSWS" {
             Write-Verbose "Using API auth method"
             Connect-OktaAPI -OktaDomain $OrgUrl -API $API -ErrorAction Stop
 
             $saveConfig = @{
-                orgUrl = $OrgUrl
+                orgUrl            = $OrgUrl
                 authorizationMode = "SSWS"
-                token = $API
+                token             = $API
             }
         }
 
         "AuthorizationCode" {
             Write-Verbose "Using OAuth 2.0 authoriation code auth method"
-            If($Port) {
+            If ($Port) {
 
                 Connect-OktaAuthorizationCode -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -Port $Port -ErrorAction Stop
 
                 $saveConfig = @{
-                    orgUrl = $OrgUrl
+                    orgUrl            = $OrgUrl
                     authorizationMode = "AuthorizationCode"
-                    clientId = $ClientId
-                    scopes = $Scopes
-                    port = $Port
+                    clientId          = $ClientId
+                    scopes            = $Scopes
+                    port              = $Port
                 }
-            } else {
+            }
+            else {
                 
                 Connect-OktaAuthorizationCode -OktaDomain $OrgUrl -ClientId $ClientId -Scopes $Scopes -ErrorAction Stop
 
                 $saveConfig = @{
-                    orgUrl = $OrgUrl
+                    orgUrl            = $OrgUrl
                     authorizationMode = "AuthorizationCode"
-                    clientId = $ClientId
-                    scopes = $Scopes
+                    clientId          = $ClientId
+                    scopes            = $Scopes
                 }
             }
         }
@@ -183,7 +188,7 @@ Function Connect-Okta {
             Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
 
             $saveConfig = @{
-                orgUrl = $OrgUrl
+                orgUrl   = $OrgUrl
                 username = $Credential.UserName
             }
         }
@@ -195,7 +200,7 @@ Function Connect-Okta {
 
     Write-Host "Connected to $Script:OktaDomain"
 
-    If($Save) {
+    If ($Save) {
         Set-OktaConfig -Path $SavePath -Config $saveConfig
     }
 }

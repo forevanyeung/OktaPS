@@ -34,24 +34,25 @@ Function Invoke-OktaRequest {
     $built_headers = @{}
 
     # Check cache for valid session cookies and expiration
-    If($Script:OktaSSO) {
-        If(-not (Test-OktaAuthentication)) {
+    If ($Script:OktaSSO) {
+        If (-not (Test-OktaAuthentication)) {
             Update-OktaAuthentication
         }
-    } else {
+    }
+    else {
         Connect-Okta
     }
 
     $webrequest_parameters['WebSession'] = $Script:OktaSSO
 
-    If($Script:OktaXSRF) {
+    If ($Script:OktaXSRF) {
         $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
     }
 
     # Query parameters
-    If($Query) {
+    If ($Query) {
         $url_builder = @{}
-        Foreach($k in $Query.Keys) {
+        Foreach ($k in $Query.Keys) {
             $url_builder[$k] = $Query[$k]
         }
         $querystring = New-HttpQueryString -QueryParameter $url_builder
@@ -60,7 +61,7 @@ Function Invoke-OktaRequest {
     }
 
     # Body
-    If($Body) {
+    If ($Body) {
         $built_headers['Accept'] = "application/json"
         $built_headers['Content-Type'] = "application/json"
 
@@ -68,7 +69,7 @@ Function Invoke-OktaRequest {
     }
 
     # Build request headers
-    Foreach($k in $Headers.Keys) {
+    Foreach ($k in $Headers.Keys) {
         $built_headers[$k] = $Headers[$k]
         Write-Debug "Adding header to request ${k}: $Headers[$k]"
     }
@@ -80,12 +81,13 @@ Function Invoke-OktaRequest {
     if ($PSCmdlet.ShouldProcess($request_uri)) {
         # supports pagination
         $next = $True
-        $return = while($next) {
+        $return = while ($next) {
             $Script:OktaDebugLastRequestUri = $request_uri
             try {
                 $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
-            } catch [Microsoft.PowerShell.Commands.HttpResponseException] {
-                If($_.Exception.Response.StatusCode -eq 429) {
+            }
+            catch [Microsoft.PowerShell.Commands.HttpResponseException] {
+                If ($_.Exception.Response.StatusCode -eq 429) {
                     Write-Debug "X-Rate-Limit-Limit: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Limit'))"
                     Write-Debug "X-Rate-Limit-Remaining: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Remaining'))"
                     Write-Debug "X-Rate-Limit-Reset: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Reset'))"
@@ -97,27 +99,31 @@ Function Invoke-OktaRequest {
                     # TODO: wait until time elapses and continue
                     Start-Sleep -Seconds $offset
                 }
-            } catch {
+            }
+            catch {
                 Write-Host "Unknown error occurred."
                 Throw $_
             }
 
             # Response
-            If($PassThru) {
+            If ($PassThru) {
                 $response
 
-            } elseif(($response.StatusCode -ge 200) -and ($response.StatusCode -le 299)) {
+            }
+            elseif (($response.StatusCode -ge 200) -and ($response.StatusCode -le 299)) {
                 $response.Content | ConvertFrom-Json
                 
-            } else {
+            }
+            else {
                 # uncaught status code, return the raw and exit
                 Return $response
             }
 
             # pagination
-            If($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
+            If ($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
                 $request_uri = $response.RelationLink['next']
-            } else {
+            }
+            else {
                 $next = $False
             }
         }

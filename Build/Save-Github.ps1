@@ -4,7 +4,7 @@ Function Save-Github {
         [String]
         $Name,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $Repository,
 

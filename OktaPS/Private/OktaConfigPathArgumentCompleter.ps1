@@ -19,8 +19,8 @@ Function OktaConfigPathArgumentCompleter {
         (Join-Path $($env:HOME ?? $env:USERPROFILE) ".okta")
     )
 
-    $configs = Foreach($path in $location) {
-        If(-not (Test-Path $path)) {
+    $configs = Foreach ($path in $location) {
+        If (-not (Test-Path $path)) {
             continue
         }
         

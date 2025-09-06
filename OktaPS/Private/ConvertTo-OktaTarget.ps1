@@ -7,13 +7,13 @@ Function ConvertTo-OktaTarget {
     )
 
     $Target | ForEach-Object {
-        If($null -eq $_) {
+        If ($null -eq $_) {
             return 
         }
 
         [Target]@{
-            id = $_.id
-            type = $_.type
+            id          = $_.id
+            type        = $_.type
             alternateId = $_.alternateId
             displayName = $_.displayName
             detailEntry = $_.detailEntry

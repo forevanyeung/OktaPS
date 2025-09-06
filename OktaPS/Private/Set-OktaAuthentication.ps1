@@ -7,8 +7,8 @@ Function Set-OktaAuthentication {
         [String]
         $AuthorizationMode,
 
-        [Parameter(ParameterSetName="SSWS", Mandatory)]
-        [Parameter(ParameterSetName="Credentials", Mandatory)]
+        [Parameter(ParameterSetName = "SSWS", Mandatory)]
+        [Parameter(ParameterSetName = "Credentials", Mandatory)]
         [Microsoft.PowerShell.Commands.WebRequestSession]
         $Session,
 
@@ -18,31 +18,31 @@ Function Set-OktaAuthentication {
         $Domain,
 
         # Parameter help description
-        [Parameter(ParameterSetName="OAuth", Mandatory)]
+        [Parameter(ParameterSetName = "OAuth", Mandatory)]
         [String]
         $ClientId,
 
         # Parameter help description
-        [Parameter(ParameterSetName="OAuth", Mandatory)]
+        [Parameter(ParameterSetName = "OAuth", Mandatory)]
         [String]
         $Token,
 
         # Parameter help description
-        [Parameter(ParameterSetName="OAuth")]
+        [Parameter(ParameterSetName = "OAuth")]
         [String]
         $RefreshToken,
 
         # Parameter help description
-        [Parameter(ParameterSetName="OAuth", Mandatory)]
+        [Parameter(ParameterSetName = "OAuth", Mandatory)]
         [Int32]
         $ExpiresIn,
 
         # Parameter help description
-        [Parameter(ParameterSetName="Credentials", Mandatory)]
+        [Parameter(ParameterSetName = "Credentials", Mandatory)]
         [System.DateTime]
         $ExpiresAt,
 
-        [Parameter(ParameterSetName="Credentials", Mandatory)]
+        [Parameter(ParameterSetName = "Credentials", Mandatory)]
         [String]
         $Username
     )
@@ -61,7 +61,7 @@ Function Set-OktaAuthentication {
     $Script:OktaAdminDomain = Get-OktaAdminDomain -Domain $Domain
     Write-Verbose "Setting OktaAdminDomain to $Script:OktaAdminDomain"
 
-    If($PSCmdlet.ParameterSetName -eq "OAuth") {
+    If ($PSCmdlet.ParameterSetName -eq "OAuth") {
         # use IWR to create a web session variable
         $null = Invoke-WebRequest -Uri $OktaDomain -SessionVariable OktaSSO
         $OktaSSO.Headers.Add("Authorization", "Bearer $Token")
@@ -82,7 +82,7 @@ Function Set-OktaAuthentication {
         Write-Verbose "Setting OktaSSOExpirationUTC to $Script:OktaSSOExpirationUTC"
     }
 
-    If($PSCmdlet.ParameterSetName -eq "SSWS") {
+    If ($PSCmdlet.ParameterSetName -eq "SSWS") {
         $Script:OktaSSO = $Session
         Write-Verbose "Setting OktaSSO web session"
 
@@ -90,7 +90,7 @@ Function Set-OktaAuthentication {
         Write-Verbose "Setting OktaSSOExpirationUTC to max"
     }
 
-    If($PSCmdlet.ParameterSetName -eq "Credentials") {
+    If ($PSCmdlet.ParameterSetName -eq "Credentials") {
         $Script:OktaSSO = $Session
         Write-Verbose "Setting OktaSSO web session"
 

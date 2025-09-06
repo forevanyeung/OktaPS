@@ -1,18 +1,18 @@
 Function Send-OktaFactorProviderDuo {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $VerifyUrl,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [String]
         $StateToken
     )
 
     $okta_verify = Invoke-RestMethod -Uri $VerifyUrl -Method "POST" -Body (@{
-        "stateToken" = $StateToken
-    } | ConvertTo-Json) -ContentType "application/json" -WebSession $OktaSSO
+            "stateToken" = $StateToken
+        } | ConvertTo-Json) -ContentType "application/json" -WebSession $OktaSSO
 
     # Get Duo settings from Okta
     $duo = $okta_verify._embedded.factor._embedded.verification
@@ -24,44 +24,45 @@ Function Send-OktaFactorProviderDuo {
     # Get Duo session ID
     $duo_prompt = ""
     $duo_prompt_sid = ""
-    While($duo_prompt.StatusCode -ne 302) {
+    While ($duo_prompt.StatusCode -ne 302) {
         $duo_prompt_params = @{}
-        if($duo_prompt_sid -ne "") {
+        if ($duo_prompt_sid -ne "") {
             $duo_prompt_params = @{
-                body = @{
+                body               = @{
                     "sid" = $duo_prompt_sid
                 }
-                ContentType = "application/x-www-form-urlencoded"
+                ContentType        = "application/x-www-form-urlencoded"
                 MaximumRedirection = 0 
                 SkipHttpErrorCheck = $True
-                ErrorAction = "SilentlyContinue"
+                ErrorAction        = "SilentlyContinue"
             }
         }
 
         $duo_prompt = Invoke-WebRequest -Method "POST" -Uri "https://$($duo.host)/frame/web/v1/auth?tx=$duo_tx&parent=http://0.0.0.0:3000/duo&v=2.1" -WebSession $OktaSSO @duo_prompt_params
 
-        If($duo_prompt.StatusCode -eq 302) {
+        If ($duo_prompt.StatusCode -eq 302) {
             $duo_prompt_sid = $duo_prompt.Headers.Location.split('=')[1]
             $duo_prompt_sid = [System.Web.HttpUtility]::UrlDecode($duo_prompt_sid)
-        } else {
+        }
+        else {
             $duo_prompt_sid = ($duo_prompt.Content | ConvertFrom-Html).SelectSingleNode("//input[@name='sid']").Attributes["value"].DeEntitizeValue
         }
     }
 
     # Send a Duo push to default phone1
     $duo_push = Invoke-RestMethod -Method "POST" -Uri "https://$($duo.host)/frame/prompt" -Body @{
-        "sid" = $duo_prompt_sid
-        "device" = "phone1"
-        "factor" = "Duo Push"
+        "sid"         = $duo_prompt_sid
+        "device"      = "phone1"
+        "factor"      = "Duo Push"
         "out_of_date" = "False"
     } -ContentType "application/x-www-form-urlencoded" -WebSession $OktaSSO -SkipHttpErrorCheck
     Write-Host "Push notification sent to: phone1"
     $duo_push_txid = $duo_push.response.txid
 
     $duo_approved = $false
-    while(-not $duo_approved) {
+    while (-not $duo_approved) {
         $duo_push = Invoke-RestMethod -Method "POST" -Uri "https://$($duo.host)/frame/status" -WebSession $OktaSSO -Body @{
-            sid = $duo_prompt_sid
+            sid  = $duo_prompt_sid
             txid = $duo_push_txid
         }
 
@@ -84,17 +85,17 @@ Function Send-OktaFactorProviderDuo {
     }
 
     $okta_callback = Invoke-RestMethod -Method "POST" -Uri $duo._links.complete.href -Body @{
-        "id" = $okta_authn._embedded.factors[0].id
-        "stateToken" = $okta_authn.stateToken
+        "id"           = $okta_authn._embedded.factors[0].id
+        "stateToken"   = $okta_authn.stateToken
         "sig_response" = "$($duo_cookie.response.cookie):$duo_app"
     } -ContentType "application/x-www-form-urlencoded" -WebSession $OktaSSO
 
     # If($okta_callback) {
-        $res = Invoke-RestMethod -Uri $VerifyUrl -Method "POST" -Body (@{
+    $res = Invoke-RestMethod -Uri $VerifyUrl -Method "POST" -Body (@{
             "stateToken" = $StateToken
         } | ConvertTo-Json) -ContentType "application/json" -WebSession $OktaSSO
 
-        $session_token = $res.sessionToken
+    $session_token = $res.sessionToken
     # }
 
     Return $session_token
