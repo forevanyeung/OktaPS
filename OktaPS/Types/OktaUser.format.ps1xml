@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>OktaUserTable</Name>
+            <ViewSelectedBy>
+                <TypeName>OktaUser</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>id</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>status</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>firstName</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>lastName</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>login</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>status</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>firstName</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>lastName</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>login</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>
+
+
+
+
+
+
+

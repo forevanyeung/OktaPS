@@ -64,13 +64,13 @@ Function Get-OktaLogs {
 
         # Get logs for a specific user, cannot be combined with the Filter parameter
         [Parameter(ParameterSetName = "ByUser", ValueFromPipeline)]
-        [PSTypeName("OktaUser")]
-        $OktaUser
+        [OktaUser]
+        $User
     )
 
     Switch ($PSCmdlet.ParameterSetName) {
         "ByUser" {
-            $Filter = "actor.id eq ""$($OktaUser.id)"" or target.id eq ""$($OktaUser.id)"""
+            $Filter = "actor.id eq ""$($User.id)"" or target.id eq ""$($User.id)"""
         }
     }
     
