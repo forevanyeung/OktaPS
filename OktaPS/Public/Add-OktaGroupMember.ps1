@@ -1,22 +1,19 @@
 Function Add-OktaGroupMember {
     [CmdletBinding()]
     param (
-        [Parameter()]
-        [String]
+        [Parameter(Mandatory = $true, ValueFromPipeline)]
+        [OktaGroup]
         $Group,
 
-        [Parameter()]
+        [Parameter(Mandatory = $true, Position = 0)]
         [OktaUser[]]
-        $Members
+        $User
     )
 
-    $OktaGroup = Get-OktaGroup -Name $Group -ErrorAction Stop
-    $GroupId = $OktaGroup.id
-
-    Foreach ($member in $Members) {
-        If ($member.id) {
-            Write-Verbose "Adding $($member.login) to $($OktaGroup.Name)"
-            Invoke-OktaRequest -Method "PUT" -Endpoint "api/v1/groups/$GroupId/users/$($member.id)"
+    Foreach ($u in $User) {
+        If ($u.id) {
+            Write-Verbose "Adding $($u.login) to $($Group.Name)"
+            Invoke-OktaRequest -Method "PUT" -Endpoint "api/v1/groups/$($Group.id)/users/$($u.id)"
         }
     }
 }

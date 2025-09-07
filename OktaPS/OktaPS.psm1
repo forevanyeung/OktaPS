@@ -1,25 +1,6 @@
 # Powershell module for development. Exports public and private functions. 
 # Production module will overwrite this file. 
-
-# Get public and private function definition files
 $ModulePath = $PSScriptRoot -eq "" ? $($pseditor.geteditorcontext().currentfile.path | split-path -parent) : $PSScriptRoot
-$Public = @( Get-ChildItem -Path $ModulePath\Public\*.ps1 -ErrorAction SilentlyContinue )
-$Private = @( Get-ChildItem -Path $ModulePath\Private\*.ps1 -ErrorAction SilentlyContinue )
-
-Foreach ($fn in @($Public + $Private)) {
-    Try {
-        Write-Host "Importing function: $($fn.FullName)"
-        
-        # Dot source the functions
-        . $fn.FullName
-
-        # export function
-        Export-ModuleMember -Function $fn.BaseName -ErrorAction SilentlyContinue
-    }
-    Catch {
-        Write-Error -Message "Failed to import function $($fn.FullName): $_"
-    }   
-}
 
 # Add Types
 $ModuleTypes = @( Get-ChildItem -Path $ModulePath\Types\*.type.ps1xml -ErrorAction SilentlyContinue )
@@ -38,8 +19,28 @@ Foreach ($f in $ModuleFormats) {
 # Add Classes
 $ModuleClasses = @( Get-ChildItem -Path $ModulePath\Types\*.class.ps1 -ErrorAction SilentlyContinue )
 Foreach ($class in $ModuleClasses) {
+    # import classes globally to make them available during development
     Write-Host "Dot sourcing class: $($class.FullName)"
-    . $class.FullName
+    Import-Module $class.FullName -Global -Force
+}
+
+# Get public and private function definition files
+$Public = @( Get-ChildItem -Path $ModulePath\Public\*.ps1 -ErrorAction SilentlyContinue )
+$Private = @( Get-ChildItem -Path $ModulePath\Private\*.ps1 -ErrorAction SilentlyContinue )
+
+Foreach ($fn in @($Public + $Private)) {
+    Try {
+        Write-Host "Importing function: $($fn.FullName)"
+        
+        # Dot source the functions
+        . $fn.FullName
+
+        # export function
+        Export-ModuleMember -Function $fn.BaseName -ErrorAction SilentlyContinue
+    }
+    Catch {
+        Write-Error -Message "Failed to import function $($fn.FullName): $_"
+    }   
 }
 
 # Import dependency modules

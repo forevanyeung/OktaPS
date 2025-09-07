@@ -1,22 +1,19 @@
 Function Remove-OktaGroupMember {
     [CmdletBinding()]
     param (
-        [Parameter()]
-        [String]
+        [Parameter(Mandatory = $true, ValueFromPipeline)]
+        [OktaGroup]
         $Group,
-        
-        [Parameter()]
-        [String[]]
-        $Members
+
+        [Parameter(Mandatory = $true, Position = 0)]
+        [OktaUser[]]
+        $User
     )
 
-    $OktaGroup = Get-OktaGroup -Identity $Group -ErrorAction Stop
-    $GroupId = $OktaGroup.id
-
-    Foreach ($memberId in $Members) {
-        # Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/users/$member"
-        Write-Verbose "Removing $memberId from $($OktaGroup.Name)"
-        Invoke-OktaRequest -Method "DELETE" -Endpoint "/api/v1/groups/$GroupId/users/$memberId"
+    Foreach ($u in $User) {
+        If ($u.id) {
+            Write-Verbose "Removing $($u.login) from $($Group.Name)"
+            Invoke-OktaRequest -Method "DELETE" -Endpoint "api/v1/groups/$($Group.id)/users/$($u.id)"
+        }
     }
-    
 }

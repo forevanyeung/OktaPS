@@ -1,5 +1,6 @@
 Function Get-OktaGroup {
     [CmdletBinding(DefaultParameterSetName = 'AllGroups')]
+    [OutputType("OktaGroup")]
     param (
         # Specifies an ID or name of an Okta group to retrieve. If searching by ID, it must be an exact match and only 
         # one result will be returned. If searching by name, it will conduct a starts with query, and if multiple matches
