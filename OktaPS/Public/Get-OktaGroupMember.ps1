@@ -23,7 +23,9 @@ Function Get-OktaGroupMember {
         $Group
     )
 
-    $members = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/groups/$($Group.Id)/users"
+    $query = @{ limit = 200 }
+
+    $members = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/groups/$($Group.Id)/users" -Query $query
 
     $OktaUsers = Foreach ($m in $members) {
         ConvertTo-OktaUser -InputObject $m
