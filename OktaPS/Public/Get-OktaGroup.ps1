@@ -1,4 +1,21 @@
 Function Get-OktaGroup {
+    <#
+    .SYNOPSIS
+        Gets one or more Okta groups.
+    .DESCRIPTION
+        The Get-OktaGroup cmdlet gets a group or performs a search to retrieve multiple groups from Okta.
+    .NOTES
+        
+    .LINK
+        https://developer.okta.com/docs/api/openapi/okta-management/management/tag/Group/#tag/Group/operation/listGroupUsers
+    .EXAMPLE
+        Get-OktaGroup
+        Lists all groups
+    .EXAMPLE
+        Get-OktaGroup -Group Accounting
+        Get details for the Accounting group
+    #>
+    
     [CmdletBinding(DefaultParameterSetName = 'AllGroups')]
     [OutputType("OktaGroup")]
     param (

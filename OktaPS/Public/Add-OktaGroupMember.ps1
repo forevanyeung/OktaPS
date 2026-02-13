@@ -1,4 +1,18 @@
 Function Add-OktaGroupMember {
+    <#
+    .SYNOPSIS
+        Assigns a user to a group.
+    .DESCRIPTION
+        Assigns a user to a group.
+    .NOTES
+        
+    .LINK
+        https://developer.okta.com/docs/api/openapi/okta-management/management/tag/Group/#tag/Group/operation/assignUserToGroup
+    .EXAMPLE
+        Add-OktaGroupMember -Group Accounting -Member anna.unstoppable
+        Assigns the user anna.unstoppable from the group Accounting
+    #>
+
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline)]
