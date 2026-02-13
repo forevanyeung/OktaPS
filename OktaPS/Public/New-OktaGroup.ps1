@@ -1,5 +1,6 @@
 Function New-OktaGroup {
     [CmdletBinding()]
+    [OutputType("OktaGroup")]
     param (
         [Parameter(Mandatory)]
         [String]
