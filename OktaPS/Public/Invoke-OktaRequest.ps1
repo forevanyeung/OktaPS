@@ -67,6 +67,11 @@ Function Invoke-OktaRequest {
         $webrequest_parameters['Body'] = $Body | ConvertTo-Json -Depth 99
     }
 
+    # Add User-Agent header
+    if (-not $built_headers.ContainsKey('User-Agent')) {
+        $built_headers['User-Agent'] = Get-OktaUserAgent
+    }
+
     # Build request headers
     Foreach($k in $Headers.Keys) {
         $built_headers[$k] = $Headers[$k]
