@@ -48,6 +48,7 @@ $idxForm = @{
 
 $idxStatus = 0
 $customUriOnce = $true
+$i = 0
 :idx while($idxForm) {
     $res = Invoke-IDXForm -IDXForm $idxForm -Value $idxValue -WebSession $OktaSSO
     $idx = $res.idx
@@ -161,10 +162,14 @@ $customUriOnce = $true
             # 'skip' {}                              # Optional step
 
             'device-challenge-poll' {               # Poll for Okta Verify
-                Write-Host "Waiting for authentication approval, check Okta Verify"
-                $refreshInterval = $remediation.refresh ?? 2000
+                $dotCount = (($i - 1) % 3) + 1
+                $status = "Check Okta Verify" + "." * $dotCount
+                Write-Progress -Activity "Waiting for authentication approval" -Status $status 
 
+                $refreshInterval = $remediation.refresh ?? 2000
                 Start-Sleep -Milliseconds $refreshInterval
+
+                $i++
 
                 #Invoke-IDXForm
                 $idxForm = $remediation
