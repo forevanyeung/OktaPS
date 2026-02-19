@@ -31,17 +31,27 @@ $stateToken = $stateToken -replace '\\x', '%'
 $stateToken = [System.Uri]::UnescapeDataString($stateToken)
 
 # introspect
-$idxStatus = 0
-$idx = Invoke-RestMethod -Method POST -Uri "$domain/idp/idx/introspect" -Headers @{
-    'Accept'       = 'application/ion+json; okta-version=1.0.0'
-    'Content-Type' = 'application/ion+json; okta-version=1.0.0'
-} -Body (@{
-    stateToken = $stateToken
-} | ConvertTo-Json) -WebSession $OktaSSO -SkipHttpErrorCheck -StatusCodeVariable idxStatus
+$idxForm = @{
+    name = "introspect"
+    href = "$domain/idp/idx/introspect"
+    method = "POST"
+    produces = "application/ion+json; okta-version=1.0.0"
+    accepts = "application/ion+json; okta-version=1.0.0"
+    value = @(
+        @{
+            name = "stateToken"
+            required = $true
+            value = $stateToken
+        }
+    )
+}
 
+$idxStatus = 0
 $customUriOnce = $true
-:idx while($idx) {
-    #TODO: move IDXForm here
+:idx while($idxForm) {
+    $res = Invoke-IDXForm -IDXForm $idxForm -Value $idxValue -WebSession $OktaSSO
+    $idx = $res.idx
+    $idxStatus = $res.status
 
     If($idx.psobject.Properties.name -contains "messages") {
         $idx.messages.value | ForEach-Object {
@@ -95,10 +105,10 @@ $customUriOnce = $true
 
                     # POST cancel
                     Write-Verbose "Cancel LOOPBACK"
-                    $res = Invoke-IDXForm -IDXForm $relatesTo.cancel
-                    $idx = $res.idx
-                    $idxStatus = $res.status
-
+                    # Invoke-IDXForm
+                    $idxForm = $relatesTo.cancel
+                    $idxValue = @{}
+                    
                     Continue idx
 
                     #TODO: restart remediation based on response
@@ -135,9 +145,9 @@ $customUriOnce = $true
                     }
                 }
 
-                $res = Invoke-IDXForm -IDXForm $remediation -Value $value -WebSession $OktaSSO
-                $idx = $res.idx
-                $idxStatus = $res.status
+                #Invoke-IDXForm
+                $idxForm = $remediation
+                $idxValue = $value
 
                 Continue idx
             }
@@ -156,16 +166,17 @@ $customUriOnce = $true
 
                 Start-Sleep -Milliseconds $refreshInterval
 
-                #TODO: move up
-                $res = Invoke-IDXForm -IDXForm $remediation -WebSession $OktaSSO
-                $idx = $res.idx
-                $idxStatus = $res.status
+                #Invoke-IDXForm
+                $idxForm = $remediation
+                $idxValue = @{}
 
                 Continue idx
             }
 
             default {
-                #TODO: erase loop
+                #Invoke-IDXForm
+                $idxForm = @{}
+                $idxValue = @{}
             }
         }
     }
