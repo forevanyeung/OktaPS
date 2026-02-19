@@ -11,18 +11,19 @@ Get-ChildItem -Path $PSScriptRoot -Filter "*.ps1" | ForEach-Object {
 
 If($null -eq $domain -or $null -eq $cred) {
     $domain = Read-Host "Enter Okta domain"
+    $adminDomain = Read-Host "Enter admin domain"
     $cred = Get-Credential
 }
 
 ## Begin
-$loginPage = Invoke-WebRequest -Uri $domain -SessionVariable OktaSSO
+$loginPage = Invoke-WebRequest -Uri $adminDomain -SessionVariable OktaSSO
 
 # Step 2: Extract stateToken from the page
 if ($loginPage.Content -notmatch "var stateToken = '([^']+)';") {
-    throw "Could not find stateToken in the response from $domain"
+    throw "Could not find stateToken in the response from $adminDomain"
 }
 
-Write-Verbose "Successfully extracted stateToken from $domain"
+Write-Verbose "Successfully extracted stateToken from $adminDomain"
 $stateToken = $Matches[1]
 
 # Decode the state token (it's URL encoded with \x instead of %)
@@ -54,8 +55,8 @@ $customUriOnce = $true
 
     Write-Verbose "Status code received: $idxStatus"
     If($idxStatus -ge 400) {
-        Write-Verbose "There was an error"
-        Break
+        Write-Error $idx
+        throw "There was an error"
     }
 
     foreach ($remediation in $IDX.remediation.value) {
