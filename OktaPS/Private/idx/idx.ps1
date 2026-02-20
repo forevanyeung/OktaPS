@@ -70,6 +70,32 @@ $i = 0
         throw "There was an error"
     }
 
+    If($idx.psobject.Properties.name -contains "success") {
+        $success = Invoke-WebRequest -Uri $idx.success.href -WebSession $OktaSSO
+        $session = Invoke-RestMethod -Uri "$adminDomain/api/v1/sessions/me" -WebSession $OktaSSO
+
+        If($success.content -match '(?:id="_xsrfToken".*?>)(?<xsrfToken>.*?)(?:<)') {
+            If($Matches.xsrfToken.Length -gt 0) {
+                $Script:OktaXSRF = $Matches.xsrfToken
+            } else {
+                Write-Warning "XSRF token length is 0. Some Okta endpoints might not be available."
+            }
+        } else {
+            Write-Warning "Unable to get XSRF token. Some Okta endpoints might not be available."
+        }
+        
+        $authentication = @{
+            AuthorizationMode = "Credential"
+            Session = $OktaSSO
+            Domain = $domain
+            ExpiresAt = $session.expiresAt
+            UserName = $cred.UserName
+        }
+        Set-OktaAuthentication @authentication
+        
+        Break idx
+    }
+
     foreach ($remediation in $IDX.remediation.value) {
         Write-Verbose "Remediation name $($remediation.name)"
 
