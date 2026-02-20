@@ -1,29 +1,24 @@
-# dot source idx files
-Write-Host $PSScriptRoot
-Write-Host $MyInvocation.MyCommand.Definition
-Get-ChildItem -Path $PSScriptRoot -Filter "*.ps1" | ForEach-Object {
-    If($_.FullName -eq $MyInvocation.MyCommand.Definition) { 
-        Return 
-    }
-    Write-Verbose "Dot-sourcing: $_"
-    . $_
-}
+[CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [String]
+        $OktaDomain,
 
-If($null -eq $domain -or $null -eq $cred) {
-    $domain = Read-Host "Enter Okta domain"
-    $adminDomain = Read-Host "Enter admin domain"
-    $cred = Get-Credential
-}
+        [Parameter(Mandatory)]
+        [System.Management.Automation.PSCredential]
+        $Credential
+    )
 
-## Begin
-$loginPage = Invoke-WebRequest -Uri $adminDomain -SessionVariable OktaSSO
+
+$OktaAdminDomain = Get-OktaAdminDomain -Domain $OktaDomain
+$loginPage = Invoke-WebRequest -Uri $OktaAdminDomain -SessionVariable OktaSSO
 
 # Step 2: Extract stateToken from the page
 if ($loginPage.Content -notmatch "var stateToken = '([^']+)';") {
-    throw "Could not find stateToken in the response from $adminDomain"
+    throw "Could not find stateToken in the response from $OktaAdminDomain"
 }
 
-Write-Verbose "Successfully extracted stateToken from $adminDomain"
+Write-Verbose "Successfully extracted stateToken from $OktaAdminDomain"
 $stateToken = $Matches[1]
 
 # Decode the state token (it's URL encoded with \x instead of %)
@@ -33,7 +28,7 @@ $stateToken = [System.Uri]::UnescapeDataString($stateToken)
 # introspect
 $idxForm = @{
     name = "introspect"
-    href = "$domain/idp/idx/introspect"
+    href = "$OktaDomain/idp/idx/introspect"
     method = "POST"
     produces = "application/ion+json; okta-version=1.0.0"
     accepts = "application/ion+json; okta-version=1.0.0"
@@ -72,7 +67,7 @@ $i = 0
 
     If($idx.psobject.Properties.name -contains "success") {
         $success = Invoke-WebRequest -Uri $idx.success.href -WebSession $OktaSSO
-        $session = Invoke-RestMethod -Uri "$adminDomain/api/v1/sessions/me" -WebSession $OktaSSO
+        $session = Invoke-RestMethod -Uri "$OktaAdminDomain/api/v1/sessions/me" -WebSession $OktaSSO
 
         If($success.content -match '(?:id="_xsrfToken".*?>)(?<xsrfToken>.*?)(?:<)') {
             If($Matches.xsrfToken.Length -gt 0) {
@@ -87,7 +82,7 @@ $i = 0
         $authentication = @{
             AuthorizationMode = "Credential"
             Session = $OktaSSO
-            Domain = $domain
+            Domain = $OktaDomain
             ExpiresAt = $session.expiresAt
             UserName = $cred.UserName
         }
@@ -182,7 +177,11 @@ $i = 0
             # 'unlock-account' {}                    # Unlock account
             'challenge-authenticator' {}           # Password/MFA challenge
             'authenticator-verification-data' {}   # Provide verification code
-            'select-authenticator-authenticate' {} # Choose which MFA to use
+            
+            'select-authenticator-authenticate' {  # Choose which MFA to use
+                
+            }
+
             # 'select-authenticator-enroll' {}       # Choose which MFA to enroll
             # 'enroll-authenticator' {}              # Enroll new MFA
             # 'skip' {}                              # Optional step

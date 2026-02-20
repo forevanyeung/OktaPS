@@ -83,9 +83,12 @@ okta:
 
 ### Credential
 🚧 Under construction 🚧  
-Credential authentication no longer works reliably, the recommended method is Authorization Code. Credential auth used 
-to emulate the same requests your browser would make to Okta. This was the simplest to set up, and would give you the 
-same 
+Credential authentication has been updated to work with Identity Engine (OIE). Credential auth
+emulates the same requests your browser would make to Okta. This is the simplest to set up, 
+and gives you the same access you have on the web. 
+
+For backward-compatibility to Classic engine, specify `classic: true` in your yaml config. Note, 
+support for Classic orgs is not actively being tested as I do not have access to a Classic org.
 
 ```pwsh
 Connect-Okta -OktaDomain "https://dev-8675309.okta.com" -Credential "anna.unstoppable"

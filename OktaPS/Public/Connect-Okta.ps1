@@ -179,12 +179,23 @@ Function Connect-Okta {
         }
 
         "Credential" {
-            Write-Verbose "Using Credential auth method"
-            Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
+            #TODO: do not allow in noninteractive mode
+            If(-not [Environment]::UserInteractive) {
+                Write-Error "Credential auth requires an interactive shell"
+            }
+            
+            #TODO: switch to IDX by default, use classic only if explicitly specified in yaml
+            If($yamlConfig.classic) {
+                Write-Verbose "Using Credential (Classic) auth method"
+                Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
+            } else {
+                Write-Verbose "Using Credential (OIE) auth method"
+                Connect-OktaIDX -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
 
-            $saveConfig = @{
-                orgUrl = $OrgUrl
-                username = $Credential.UserName
+                $saveConfig = @{
+                    orgUrl = $OrgUrl
+                    username = $Credential.UserName
+                }
             }
         }
 

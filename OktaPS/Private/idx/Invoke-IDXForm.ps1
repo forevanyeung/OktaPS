@@ -14,7 +14,10 @@ Function Invoke-IDXForm {
 
     $body = @{}
     $IDXForm.value | ForEach-Object {
+        # set any default values
         $fieldValue = $_.value
+
+        # override with values
         If($Value.$($_.name)) {
             $fieldValue = $Value.$($_.name)
         }
