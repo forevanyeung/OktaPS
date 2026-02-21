@@ -79,11 +79,11 @@ Function Connect-Okta {
     Switch($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
             # Default to authorization code method
-            $AuthFlow = "AuthorizationCode"
+            $AuthFlow = "Credential"
 
-            $oktaYAMLPath = Get-OktaConfig -Path $Config
+            $oktaYAMLPath = Get-OktaConfig -Path $Config -ErrorAction SilentlyContinue
             If([String]::IsNullOrEmpty($oktaYAMLPath)) {
-                Return
+                Break
             }
 
             Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
@@ -179,9 +179,13 @@ Function Connect-Okta {
         }
 
         "Credential" {
-            #TODO: do not allow in noninteractive mode
+            # Credential auth requires user interaction, so check if in noninteractive mode
             If(-not [Environment]::UserInteractive) {
-                Write-Error "Credential auth requires an interactive shell"
+                Write-Error "Credential auth requires an interactive shell, use Authorization Code auth instead."
+            }
+
+            If([String]::IsNullOrEmpty($OrgUrl)) {
+                $OrgUrl = Read-Host "Enter Okta domain (with https://)"
             }
             
             #TODO: switch to IDX by default, use classic only if explicitly specified in yaml
@@ -204,6 +208,7 @@ Function Connect-Okta {
         }
     }
 
+    #TODO: fix
     Write-Host "Connected to $Script:OktaDomain"
 
     If($Save) {
