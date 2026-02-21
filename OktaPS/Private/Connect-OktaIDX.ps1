@@ -67,6 +67,10 @@ Function Connect-OktaIDX {
         }
 
         If($idx.psobject.Properties.name -contains "success") {
+            # device polling success, clean up
+            [Console]::TreatControlCAsInput = $false
+            Write-Progress -Complete
+
             $success = Invoke-WebRequest -Uri $idx.success.href -WebSession $OktaSSO
             $session = Invoke-RestMethod -Uri "$OktaAdminDomain/api/v1/sessions/me" -WebSession $OktaSSO
 
@@ -188,9 +192,33 @@ Function Connect-OktaIDX {
                 # 'skip' {}                              # Optional step
 
                 'device-challenge-poll' {               # Poll for Okta Verify
+                    # check input for ctrl+c to break out of loop and choose different factor
+                    If ($Host.UI.RawUI.KeyAvailable -and ($Key = $Host.UI.RawUI.ReadKey("AllowCtrlC,NoEcho,IncludeKeyUp"))) {
+                        # Flush the key buffer again for the next loop.
+                        $stop = [Int]$Key.Character -eq 3
+                        $Host.UI.RawUI.FlushInputBuffer()
+
+                        If ($stop) {
+                            Write-Host ""
+                            [Console]::TreatControlCAsInput = $False
+                            Write-Progress -Completed
+
+                            # check for other available factors
+
+                            #Invoke-IDXForm - cancel
+                            Write-Warning "Polling cancelled, exiting login."
+                            $res = Invoke-IDXForm -IDXForm $IDX.cancel -WebSession $OktaSSO
+                            Return
+                        }
+                    }
+
+
                     $dotCount = (($i - 1) % 3) + 1
-                    $status = "Check Okta Verify" + "." * $dotCount
-                    Write-Progress -Activity "Waiting for authentication approval" -Status $status 
+                    $status = "Press Ctrl+C to use a different factor" + "." * $dotCount
+                    Write-Progress -Activity "Waiting for Okta Verify approval" -Status $status 
+
+                    # allow stopping the loop with Ctrl+C
+                    [Console]::TreatControlCAsInput = $true
 
                     $refreshInterval = $remediation.refresh ?? 2000
                     Start-Sleep -Milliseconds $refreshInterval
