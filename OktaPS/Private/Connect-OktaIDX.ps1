@@ -184,7 +184,13 @@ Function Connect-OktaIDX {
                 'authenticator-verification-data' {}   # Provide verification code
                 
                 'select-authenticator-authenticate' {  # Choose which MFA to use
-                    
+                    $authenticator  = $remediation.value | Where-Object { $_.name -eq 'authenticator' }
+                    $idxForm = $remediation
+                    $idxValue = @{
+                        authenticator = Read-OktaIDXFactor -Options $authenticator.options
+                    }
+
+                    Continue idx
                 }
 
                 # 'select-authenticator-enroll' {}       # Choose which MFA to enroll
