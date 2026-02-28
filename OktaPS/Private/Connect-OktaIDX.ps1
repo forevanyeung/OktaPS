@@ -164,24 +164,10 @@ Function Connect-OktaIDX {
 
             # remediation
             switch ($remediation.name) {
-                'identify' {                          # Username entry
-                    $value = @{
-                        identifier = $Credential.UserName
-                        credentials = @{
-                            passcode = $Credential.GetNetworkCredential().password
-                        }
-                    }
-
-                    #Invoke-IDXForm
-                    $idxForm = $remediation
-                    $idxValue = $value
-
-                    Continue idx
-                }
-
+                # 'identify' {}                          # Username entry, use default
                 # 'unlock-account' {}                    # Unlock account
-                'challenge-authenticator' {}           # Password/MFA challenge
-                'authenticator-verification-data' {}   # Provide verification code
+                # 'challenge-authenticator' {}           # Password/MFA challenge, use default
+                # 'authenticator-verification-data' {}   # Provide verification code
                 
                 'select-authenticator-authenticate' {  # Choose which MFA to use
                     $authenticator  = $remediation.value | Where-Object { $_.name -eq 'authenticator' }
@@ -240,8 +226,10 @@ Function Connect-OktaIDX {
 
                 default {
                     #Invoke-IDXForm
-                    $idxForm = @{}
-                    $idxValue = @{}
+                    $idxForm = $remediation
+                    $idxValue = Read-OktaIDXForm -Form $remediation.value -Credential $Credential
+
+                    Continue idx
                 }
             }
         }
