@@ -34,6 +34,7 @@ Function Invoke-IDXForm {
     $res = Invoke-RestMethod -Method $IDXForm.method -Uri $IDXForm.href -Headers @{
         'Accept'                     = $IDXForm.accepts
         'Content-Type'               = $IDXForm.produces
+        #TODO:
         # 'User-Agent'                 = Get-OktaUserAgent
         'User-Agent'                 = 'PowerShell/7.5.4 (Macintosh; Intel Mac OS X 10_15_7) OktaPS/0.0.0'
     } -Body ($body | ConvertTo-Json) -SkipHttpErrorCheck -StatusCodeVariable status -WebSession $WebSession

@@ -181,9 +181,10 @@ Function Connect-OktaIDX {
 
                 # 'select-authenticator-enroll' {}       # Choose which MFA to enroll
                 # 'enroll-authenticator' {}              # Enroll new MFA
-                # 'skip' {}                              # Optional step
+                # 'skip' {}                              # Optional step    
 
-                'device-challenge-poll' {               # Poll for Okta Verify
+                { ($_ -eq 'challenge-poll') -or 
+                  ($_ -eq 'device-challenge-poll') } {  # Poll for Okta Verify  
                     # check input for ctrl+c to break out of loop and choose different factor
                     If ($Host.UI.RawUI.KeyAvailable -and ($Key = $Host.UI.RawUI.ReadKey("AllowCtrlC,NoEcho,IncludeKeyUp"))) {
                         # Flush the key buffer again for the next loop.
@@ -195,7 +196,7 @@ Function Connect-OktaIDX {
                             [Console]::TreatControlCAsInput = $False
                             Write-Progress -Completed
 
-                            # check for other available factors
+                            #TODO: check for other available factors
 
                             #Invoke-IDXForm - cancel
                             Write-Warning "Polling cancelled, exiting login."
@@ -225,6 +226,9 @@ Function Connect-OktaIDX {
                 }
 
                 default {
+                    # Sleep if refresh is provided, else sleep for 0ms and continue immediately
+                    Start-Sleep -Milliseconds ($remediation.refresh ?? 0)
+
                     #Invoke-IDXForm
                     $idxForm = $remediation
                     $idxValue = Read-OktaIDXForm -Form $remediation.value -Credential $Credential
