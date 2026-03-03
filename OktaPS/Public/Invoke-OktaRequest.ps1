@@ -90,6 +90,7 @@ Function Invoke-OktaRequest {
             try {
                 $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
             } catch [Microsoft.PowerShell.Commands.HttpResponseException] {
+                Write-Error "Status code: $($_.Exception.Response.StatusCode.value__)"
                 If($_.Exception.Response.StatusCode -eq 429) {
                     Write-Debug "X-Rate-Limit-Limit: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Limit'))"
                     Write-Debug "X-Rate-Limit-Remaining: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Remaining'))"
@@ -101,6 +102,8 @@ Function Invoke-OktaRequest {
 
                     # TODO: wait until time elapses and continue
                     Start-Sleep -Seconds $offset
+                } else {
+                    Throw $_
                 }
             } catch {
                 Write-Host "Unknown error occurred."
