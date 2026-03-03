@@ -97,21 +97,29 @@ Function Connect-OktaIDX {
         }
 
         foreach ($remediation in $IDX.remediation.value) {
-            Write-Verbose "Remediation name $($remediation.name)"
+            Write-Verbose "Remediation name: $($remediation.name)"
 
             # relatesTo
             if ($remediation.psobject.Properties.name -contains "relatesTo") {
-                Write-Verbose "$($remediation.name) $($remediation.relatesTo)"
+                Write-Verbose "Relates to: $($remediation.relatesTo)"
 
-                $relatesTo = $IDX.($remediation.relatesTo).value
+                if ($remediation.relatesTo -eq "$.currentAuthenticator") {
+                    $relatesTo = $IDX.currentAuthenticator.value.contextualData.challenge.value
+                    $cancel = $IDX.currentAuthenticator.value.cancel
+                } else {
+                    $relatesTo = $IDX.($remediation.relatesTo).value
+                }
 
-                switch ($relatesTo.challengeMethod) {
+                :challenge switch ($relatesTo.challengeMethod) {
                     'LOOPBACK' {
                         [int]$timeout = [Math]::Ceiling($relatesTo.probeTimeoutMillis / 1000)
                         foreach ($port in $relatesTo.ports) {
                             # GET domain:port/probe
                             try {
-                                Invoke-RestMethod -Uri "$($relatesTo.domain):$($port)/probe" -ConnectionTimeoutSeconds $timeout
+                                Invoke-RestMethod -Uri "$($relatesTo.domain):$($port)/probe" -ConnectionTimeoutSeconds $timeout -Headers @{
+                                    'Accept' = "*/*"
+                                    'Origin' = $OktaDomain
+                                }
                             }
                             catch {
                                 Write-Verbose "Connection timed out to: $($relatesTo.domain):$($port)/probe"
@@ -122,20 +130,26 @@ Function Connect-OktaIDX {
                             Write-Verbose "Sending challenge request to $port"
                             Invoke-RestMethod -Method POST -Uri "$($relatesTo.domain):$($port)/challenge" -Headers @{
                                 'Content-Type' = "application/json"
+                                'Origin' = $OktaDomain
                             } -Body (@{
                                 challengeRequest = $relatesTo.challengeRequest
                             } | ConvertTo-Json)
 
                             # get out of foreach loop
-                            Return
+                            Break challenge
                         }
 
                         # POST cancel
                         Write-Verbose "Cancel LOOPBACK"
                         # Invoke-IDXForm
-                        $idxForm = $relatesTo.cancel
-                        $idxValue = @{}
-                        
+                        if ($cancel) {
+                            $idxForm = $cancel
+                            $idxValue = @{}
+                        } else {
+                            $idxForm = $relatesTo.cancel
+                            $idxValue = @{}
+                        }
+
                         Continue idx
 
                         #TODO: restart remediation based on response
