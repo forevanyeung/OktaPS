@@ -15,7 +15,17 @@ Function Get-OktaUserAgent {
     param()
 
     $psVersion = $PSVersionTable.PSVersion.ToString()
-    $osVersion = [System.Environment]::OSVersion.VersionString
+
+    If($IsLinux) {
+        $osVersion = "X11; Linux x86_64"
+    } elseif ($IsMacOS) {
+        $osVersion = "Macintosh; Intel Mac OS X 10_15_7"
+    } elseif ($IsWindows) {
+        $osVersion = "Windows NT 11.0; Win64; x64"
+    } else {
+        Write-Warning "Unknown OS platform, defaulting to generic OS version string, may result in issues."
+        $osVersion = [System.Environment]::OSVersion.VersionString
+    }
 
     # Get OktaPS module version
     $module = Get-Module OktaPS
