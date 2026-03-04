@@ -44,6 +44,7 @@ Function Connect-OktaIDX {
 
     $idxStatus = 0
     $customUriOnce = $true
+    $loopbackChallengeOnce = $true
     $i = 0
     :idx while($idxForm) {
         $res = Invoke-IDXForm -IDXForm $idxForm -Value $idxValue -WebSession $OktaSSO
@@ -112,46 +113,72 @@ Function Connect-OktaIDX {
 
                 :challenge switch ($relatesTo.challengeMethod) {
                     'LOOPBACK' {
-                        [int]$timeout = [Math]::Ceiling($relatesTo.probeTimeoutMillis / 1000)
-                        foreach ($port in $relatesTo.ports) {
-                            # GET domain:port/probe
-                            try {
-                                Invoke-RestMethod -Uri "$($relatesTo.domain):$($port)/probe" -ConnectionTimeoutSeconds $timeout -Headers @{
-                                    'Accept' = "*/*"
-                                    'Origin' = $OktaDomain
+                        if ($loopbackChallengeOnce) {
+                            [int]$timeout = [Math]::Ceiling($relatesTo.probeTimeoutMillis / 1000)
+                            foreach ($port in $relatesTo.ports) {
+                                # GET domain:port/probe
+                                try {
+                                    Invoke-RestMethod -Uri "$($relatesTo.domain):$($port)/probe" -ConnectionTimeoutSeconds $timeout -Headers @{
+                                        'Accept' = "*/*"
+                                        'Origin' = $OktaDomain
+                                    }
                                 }
+                                catch {
+                                    Write-Verbose "Connection timed out to: $($relatesTo.domain):$($port)/probe"
+                                    Continue
+                                }
+
+                                # POST domain:port/challengeRequest async so polling can happen in the main loop
+                                Write-Verbose "Sending challenge request to $port"
+                                $challengeJob = Start-ThreadJob -ScriptBlock {
+                                    $uri = "$(($using:relatesTo).domain):$($using:port)/challenge"
+                                    $headers = @{
+                                        'Content-Type' = "application/json"
+                                        'Origin' = $using:OktaDomain
+                                    }
+
+                                    $body = @{
+                                        challengeRequest = $($using:relatesTo).challengeRequest
+                                    } | ConvertTo-Json
+
+                                    $null = Invoke-RestMethod -Method POST -Uri $uri -Headers $headers -Body $body
+                                }
+
+                                #Create Event to clean up job after complete
+                                $null = Register-ObjectEvent -InputObject $challengeJob -EventName "StateChanged" -Action {
+
+                                    #Logic to handle state change
+                                    if($sender.State -match "Complete"){
+                                        Remove-Job $sender.Id
+                                    }
+
+                                    #Unregister event and remove event job
+                                    Unregister-Event -SubscriptionId $Event.EventIdentifier
+                                    Remove-Job -Name $event.SourceIdentifier
+
+                                    Write-Verbose "Challenge complete, cleaning up job $($sender.Id)"
+                                }
+
+                                $loopbackChallengeOnce = $false
+                                
+                                # get out of foreach loop
+                                Break challenge
                             }
-                            catch {
-                                Write-Verbose "Connection timed out to: $($relatesTo.domain):$($port)/probe"
-                                Continue
+                            
+                            # POST cancel
+                            Write-Verbose "Cancel LOOPBACK"
+                            # Invoke-IDXForm
+                            if ($cancel) {
+                                $idxForm = $cancel
+                                $idxValue = @{}
+                            } else {
+                                $idxForm = $relatesTo.cancel
+                                $idxValue = @{}
                             }
-
-                            # POST domain:port/challengeRequest
-                            Write-Verbose "Sending challenge request to $port"
-                            Invoke-RestMethod -Method POST -Uri "$($relatesTo.domain):$($port)/challenge" -Headers @{
-                                'Content-Type' = "application/json"
-                                'Origin' = $OktaDomain
-                            } -Body (@{
-                                challengeRequest = $relatesTo.challengeRequest
-                            } | ConvertTo-Json)
-
-                            # get out of foreach loop
-                            Break challenge
+                            
+                            Continue idx
+                            
                         }
-
-                        # POST cancel
-                        Write-Verbose "Cancel LOOPBACK"
-                        # Invoke-IDXForm
-                        if ($cancel) {
-                            $idxForm = $cancel
-                            $idxValue = @{}
-                        } else {
-                            $idxForm = $relatesTo.cancel
-                            $idxValue = @{}
-                        }
-
-                        Continue idx
-
                         #TODO: restart remediation based on response
                     }
 
