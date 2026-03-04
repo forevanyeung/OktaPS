@@ -42,7 +42,9 @@ Function Invoke-OktaRequest {
         Connect-Okta
     }
 
+    $webrequest_parameters['Method'] = $Method
     $webrequest_parameters['WebSession'] = $Script:OktaSSO
+    $webrequest_parameters['SkipHeaderValidation'] = $True
 
     If($Script:OktaXSRF) {
         $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
@@ -78,17 +80,21 @@ Function Invoke-OktaRequest {
         Write-Debug "Adding header to request ${k}: $Headers[$k]"
     }
 
+    $webrequest_parameters['Headers'] = $built_headers
+
     # Request
     # TODO: Add ability to send request to OktaDomain or OktaAdminDomain (default)
     $request_uri = "$Script:OktaAdminDomain/$Endpoint"
+    $webrequest_parameters['Uri'] = $request_uri
 
     if ($PSCmdlet.ShouldProcess($request_uri)) {
         # supports pagination
         $next = $True
         $return = while($next) {
-            $Script:OktaDebugLastRequestUri = $request_uri
+            $Script:OktaDebugLastRequestUri = $webrequest_parameters['Uri']
             try {
-                $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
+                Write-Debug ($webrequest_parameters | ConvertTo-Json -Depth 10)
+                $response = Invoke-WebRequest @webrequest_parameters
             } catch [Microsoft.PowerShell.Commands.HttpResponseException] {
                 Write-Error "Status code: $($_.Exception.Response.StatusCode.value__)"
                 If($_.Exception.Response.StatusCode -eq 429) {
@@ -124,7 +130,7 @@ Function Invoke-OktaRequest {
 
             # pagination
             If($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
-                $request_uri = $response.RelationLink['next']
+                $webrequest_parameters['Uri'] = $response.RelationLink['next']
             } else {
                 $next = $False
             }
