@@ -17,13 +17,14 @@ Function Get-OktaUserAgent {
     $psVersion = $PSVersionTable.PSVersion.ToString()
 
     If($IsLinux) {
+        # Okta does not support FastPass on Linux
         $osVersion = "X11; Linux x86_64"
     } elseif ($IsMacOS) {
         $osVersion = "Macintosh; Intel Mac OS X 10_15_7"
     } elseif ($IsWindows) {
         $osVersion = "Windows NT 11.0; Win64; x64"
     } else {
-        Write-Warning "Unknown OS platform, defaulting to generic OS version string, may result in issues."
+        Write-Warning "Unknown OS platform, defaulting to system OS version string, may result in issues."
         $osVersion = [System.Environment]::OSVersion.VersionString
     }
 
