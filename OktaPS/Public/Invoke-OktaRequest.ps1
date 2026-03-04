@@ -130,7 +130,9 @@ Function Invoke-OktaRequest {
 
             # pagination
             If($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
-                $webrequest_parameters['Uri'] = $response.RelationLink['next']
+                $nextUri = [uri]$response.RelationLink['next']
+                $nextPath = $nextUri.PathAndQuery
+                $webrequest_parameters['Uri'] = "$OktaAdminDomain/$nextPath"
             } else {
                 $next = $False
             }
