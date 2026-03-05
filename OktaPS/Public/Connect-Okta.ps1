@@ -126,6 +126,10 @@ Function Connect-Okta {
                 Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
                 Write-Error "Defaulting to authorization code method"
             }
+
+            If($yamlConfig.useragent) {
+                Set-OktaUserAgent -UserAgent $yamlConfig.useragent
+            }
         }
 
         "AuthorizationCodeAuth" { $AuthFlow = "AuthorizationCode" }
