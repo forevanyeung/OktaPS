@@ -1,4 +1,8 @@
 Function Update-OktaAuthentication {
+    param (
+        [Switch]$RefreshOnly
+    )
+
     Switch($Script:OktaAuthorizationMode) {
         "AuthorizationCode" {
             If(-not $Script:OktaOAuthRefreshToken) {
@@ -22,7 +26,7 @@ Function Update-OktaAuthentication {
 
         "Credential" {
             try {
-                $session = Invoke-RestMethod -Method "POST" -Uri "$OktaDomain/api/v1/sessions/me/lifecycle/refresh" -WebSession $Script:OktaSSO -ContentType "application/json" -ErrorAction SilentlyContinue
+                $session = Invoke-RestMethod -Method "POST" -Uri "$Script:OktaDomain/api/v1/sessions/me/lifecycle/refresh" -WebSession $Script:OktaSSO -ContentType "application/json" -ErrorAction SilentlyContinue
             } catch {
                 Write-Verbose "cached expiration expired, trying to renew session"
             }
@@ -30,6 +34,12 @@ Function Update-OktaAuthentication {
             If($session.status -eq "ACTIVE") {
                 $Script:OktaSSOExpirationUTC = $session.expiresAt
                 Write-Verbose "session renewed, updated expiration to $Script:OktaSSOExpirationUTC UTC"
+                Break
+            }
+
+            If($RefreshOnly) {
+                Stop-OktaSessionRefreshTimer
+                # $Host.UI.WriteWarningLine("Okta session refresh failed ($Script:OktaSSOExpirationUTC UTC). Re-run Connect-Okta to re-authenticate.")
                 Break
             }
 

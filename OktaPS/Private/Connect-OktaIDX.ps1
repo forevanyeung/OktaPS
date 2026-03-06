@@ -93,7 +93,8 @@ Function Connect-OktaIDX {
                 UserName = $Credential.UserName
             }
             Set-OktaAuthentication @authentication
-            
+            Start-OktaSessionRefreshTimer
+
             Break idx
         }
 
@@ -111,6 +112,8 @@ Function Connect-OktaIDX {
                     $relatesTo = $IDX.($remediation.relatesTo).value
                 }
 
+                Write-Verbose "Challenge method: $($relatesTo.challengeMethod)"
+
                 :challenge switch ($relatesTo.challengeMethod) {
                     'LOOPBACK' {
                         if ($loopbackChallengeOnce) {
@@ -118,7 +121,7 @@ Function Connect-OktaIDX {
                             foreach ($port in $relatesTo.ports) {
                                 # GET domain:port/probe
                                 try {
-                                    Invoke-RestMethod -Uri "$($relatesTo.domain):$($port)/probe" -ConnectionTimeoutSeconds $timeout -Headers @{
+                                    $null = Invoke-RestMethod -Uri "$($relatesTo.domain):$($port)/probe" -ConnectionTimeoutSeconds $timeout -Headers @{
                                         'Accept' = "*/*"
                                         'Origin' = $OktaDomain
                                     }
@@ -197,9 +200,7 @@ Function Connect-OktaIDX {
                         }
                     }
 
-                    default {
-                        Write-Warning "Unknown challenge method: $($relatesTo.challengeMethod)"
-                    }
+                    default {}
                 }
             }
 
