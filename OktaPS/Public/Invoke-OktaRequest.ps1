@@ -5,7 +5,7 @@ Function Invoke-OktaRequest {
         [String]
         $Method = "GET",
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, Position = 0)]
         [String]
         $Endpoint,
 
