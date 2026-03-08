@@ -1,7 +1,7 @@
 Function Start-OktaSessionRefreshTimer {
     [CmdletBinding()]
     param (
-        [int]$CheckIntervalSeconds = 10,
+        [int]$CheckIntervalSeconds = 30,
         [int]$RefreshThresholdSeconds = 300
     )
 
@@ -13,13 +13,13 @@ Function Start-OktaSessionRefreshTimer {
     # PSEventJob runs in an isolated runspace - $Script:OktaAuth is passed via MessageData.State
     # so the timer can read/write auth state (SSOExpirationUTC, Domain, SSO) across the runspace boundary.
     $action = {
-        $verbosePref = $Event.MessageData.VerbosePreference
+        $debugPref = $Event.MessageData.DebugPreference
         $warningPref = $Event.MessageData.WarningPreference
-        Function Write-Verbose { 
+        Function Write-ThreadDebug { 
             param([string]$Message)
-            if ($verbosePref -ne 'SilentlyContinue') { $Host.UI.WriteVerboseLine("[OktaIDXRefreshTimer] $Message") } 
+            if ($debugPref -ne 'SilentlyContinue') { $Host.UI.WriteDebugLine("[OktaIDXRefreshTimer] $Message") } 
         }
-        Function Write-Warning { 
+        Function Write-ThreadWarning { 
             param([string]$Message)
             if ($warningPref -ne 'SilentlyContinue') { $Host.UI.WriteWarningLine("[OktaIDXRefreshTimer] $Message") } 
         }
@@ -29,30 +29,30 @@ Function Start-OktaSessionRefreshTimer {
             $threshold = $Event.MessageData.Threshold
 
             if (-not $state.SSOExpirationUTC) {
-                Write-Verbose "No session expiration found"
+                Write-ThreadDebug "No session expiration found"
                 return
             }
 
             $timeLeft = ($state.SSOExpirationUTC - (Get-Date).ToUniversalTime()).TotalSeconds
-            Write-Verbose "${timeLeft}s remaining (threshold: ${threshold}s)"
+            Write-ThreadDebug "${timeLeft}s remaining (threshold: ${threshold}s)"
 
             if ($timeLeft -gt $threshold) { return }
 
-            Write-Verbose "Refreshing session..."
-            $session = Invoke-RestMethod -Method POST -Uri "$($state.AdminDomain)/api/v1/sessions/me/lifecycle/refresh" -WebSession $state.SSO -ContentType "application/json" -ErrorAction Stop
+            Write-ThreadDebug "Refreshing session..."
+            $session = Invoke-RestMethod -Method POST -Uri "$($state.AdminDomain)/api/v1/sessions/me/lifecycle/refresh" -WebSession $state.SSO -ContentType "application/json" -TimeoutSec 30 -ErrorAction Stop
 
             if ($session.status -eq "ACTIVE") {
                 $state.SSOExpirationUTC = [datetime]$session.expiresAt
-                Write-Verbose "Session refreshed, new expiry: $($state.SSOExpirationUTC)"
+                Write-ThreadDebug "Session refreshed, new expiry: $($state.SSOExpirationUTC)"
             } else {
                 $Sender.Stop()
                 Unregister-Event -SourceIdentifier "OktaIDXRefreshTimer" -ErrorAction SilentlyContinue
-                Write-Warning "Session refresh failed. Re-run Connect-Okta to re-authenticate."
+                Write-ThreadWarning "Session refresh failed. Re-run Connect-Okta to re-authenticate."
             }
         } catch {
             $Sender.Stop()
             Unregister-Event -SourceIdentifier "OktaIDXRefreshTimer" -ErrorAction SilentlyContinue
-            Write-Warning "Session refresh error: $_. Re-run Connect-Okta to re-authenticate."
+            Write-ThreadWarning "Session refresh error: $_. Re-run Connect-Okta to re-authenticate."
         }
     }
 
@@ -60,7 +60,7 @@ Function Start-OktaSessionRefreshTimer {
     $messageData = @{
         State             = $Script:OktaAuth
         Threshold         = $RefreshThresholdSeconds
-        VerbosePreference = $VerbosePreference
+        DebugPreference = $DebugPreference
         WarningPreference = $WarningPreference
     }
     Register-ObjectEvent -InputObject $timer -EventName "Elapsed" -SourceIdentifier "OktaIDXRefreshTimer" -Action $action -MessageData $messageData | Out-Null
