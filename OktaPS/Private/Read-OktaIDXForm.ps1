@@ -45,12 +45,11 @@ Function Read-OktaIDXForm {
                     }
                 }
 
-                "passcode" { 
+                "passcode" {
                     If($Credential) {
                         $Credential.GetNetworkCredential().password
                     } else {
                         write-verbose "no credential provided, prompting for password"
-                        Wait-Debugger
                         Read-OktaIDXFieldDefault -field $field
                     }
                 }
