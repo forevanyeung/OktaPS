@@ -1,8 +1,8 @@
 Function Start-OktaSessionRefreshTimer {
     [CmdletBinding()]
     param (
-        [int]$CheckIntervalSeconds = 3,
-        [int]$RefreshThresholdSeconds = 880
+        [int]$CheckIntervalSeconds = 10,
+        [int]$RefreshThresholdSeconds = 300
     )
 
     Stop-OktaSessionRefreshTimer
