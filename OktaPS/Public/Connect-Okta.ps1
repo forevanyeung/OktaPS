@@ -213,7 +213,7 @@ Function Connect-Okta {
     }
 
     #TODO: fix
-    Write-Host "Connected to $Script:OktaDomain"
+    Write-Host "Connected to $($Script:OktaAuth.Domain)"
 
     If($Save) {
         Set-OktaConfig -Path $SavePath -Config $saveConfig

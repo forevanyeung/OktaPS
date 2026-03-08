@@ -11,10 +11,10 @@ Function Set-OktaAdminAPIWarning {
     )
 
     If($Enable) {
-        $Script:OktaSuppressAdminAPIWarning = $False
+        $Script:OktaConfig.SuppressAdminAPIWarning = $False
     }
 
     If($Disable) {
-        $Script:OktaSuppressAdminAPIWarning = $True
+        $Script:OktaConfig.SuppressAdminAPIWarning = $True
     }
 }

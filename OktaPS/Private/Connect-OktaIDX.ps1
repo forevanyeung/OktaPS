@@ -77,7 +77,7 @@ Function Connect-OktaIDX {
 
             If($success.content -match '(?:id="_xsrfToken".*?>)(?<xsrfToken>.*?)(?:<)') {
                 If($Matches.xsrfToken.Length -gt 0) {
-                    $Script:OktaXSRF = $Matches.xsrfToken
+                    $Script:OktaAuth.XSRF = $Matches.xsrfToken
                 } else {
                     Write-Warning "XSRF token length is 0. Some Okta endpoints might not be available."
                 }

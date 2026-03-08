@@ -34,7 +34,7 @@ Function Invoke-OktaRequest {
     $built_headers = @{}
 
     # Check cache for valid session cookies and expiration
-    If($Script:OktaSSO) {
+    If($Script:OktaAuth.SSO) {
         If(-not (Test-OktaAuthentication)) {
             Update-OktaAuthentication
         }
@@ -43,11 +43,11 @@ Function Invoke-OktaRequest {
     }
 
     $webrequest_parameters['Method'] = $Method
-    $webrequest_parameters['WebSession'] = $Script:OktaSSO
+    $webrequest_parameters['WebSession'] = $Script:OktaAuth.SSO
     $webrequest_parameters['SkipHeaderValidation'] = $True
 
-    If($Script:OktaXSRF) {
-        $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
+    If($Script:OktaAuth.XSRF) {
+        $built_headers['X-Okta-XsrfToken'] = $Script:OktaAuth.XSRF
     }
 
     # Query parameters
@@ -84,14 +84,14 @@ Function Invoke-OktaRequest {
 
     # Request
     # TODO: Add ability to send request to OktaDomain or OktaAdminDomain (default)
-    $request_uri = "$Script:OktaAdminDomain/$Endpoint"
+    $request_uri = "$($Script:OktaAuth.AdminDomain)/$Endpoint"
     $webrequest_parameters['Uri'] = $request_uri
 
     if ($PSCmdlet.ShouldProcess($request_uri)) {
         # supports pagination
         $next = $True
         $return = while($next) {
-            $Script:OktaDebugLastRequestUri = $webrequest_parameters['Uri']
+            $Script:OktaAuth.DebugLastRequestUri = $webrequest_parameters['Uri']
             try {
                 Write-Debug ($webrequest_parameters | ConvertTo-Json -Depth 10)
                 $response = Invoke-WebRequest @webrequest_parameters
@@ -132,7 +132,7 @@ Function Invoke-OktaRequest {
             If($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
                 $nextUri = [uri]$response.RelationLink['next']
                 $nextPath = $nextUri.PathAndQuery
-                $webrequest_parameters['Uri'] = "$OktaAdminDomain/$nextPath"
+                $webrequest_parameters['Uri'] = "$($Script:OktaAuth.AdminDomain)/$nextPath"
             } else {
                 $next = $False
             }

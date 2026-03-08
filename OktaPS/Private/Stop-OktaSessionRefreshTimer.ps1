@@ -1,14 +1,11 @@
 Function Stop-OktaSessionRefreshTimer {
-    if ($Script:OktaRefreshTimerSubscription) {
-        Unregister-Event -SubscriptionId $Script:OktaRefreshTimerSubscription.Id -ErrorAction SilentlyContinue
-        Remove-Job -Name $Script:OktaRefreshTimerSubscription.Name -ErrorAction SilentlyContinue
-        $Script:OktaRefreshTimerSubscription = $null
-    }
+    Unregister-Event -SourceIdentifier "OktaIDXRefreshTimer" -ErrorAction SilentlyContinue
+    Remove-Job -Name "OktaIDXRefreshTimer" -ErrorAction SilentlyContinue
 
-    if ($Script:OktaRefreshTimer) {
-        $Script:OktaRefreshTimer.Stop()
-        $Script:OktaRefreshTimer.Dispose()
-        $Script:OktaRefreshTimer = $null
+    if ($Script:OktaAuth.RefreshTimer) {
+        $Script:OktaAuth.RefreshTimer.Stop()
+        $Script:OktaAuth.RefreshTimer.Dispose()
+        $Script:OktaAuth.RefreshTimer = $null
         Write-Verbose "Session refresh timer stopped"
     }
 }
