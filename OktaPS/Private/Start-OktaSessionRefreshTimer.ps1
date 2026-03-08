@@ -39,7 +39,7 @@ Function Start-OktaSessionRefreshTimer {
             if ($timeLeft -gt $threshold) { return }
 
             Write-Verbose "Refreshing session..."
-            $session = Invoke-RestMethod -Method POST -Uri "$($state.Domain)/api/v1/sessions/me/lifecycle/refresh" -WebSession $state.SSO -ContentType "application/json" -ErrorAction Stop
+            $session = Invoke-RestMethod -Method POST -Uri "$($state.AdminDomain)/api/v1/sessions/me/lifecycle/refresh" -WebSession $state.SSO -ContentType "application/json" -ErrorAction Stop
 
             if ($session.status -eq "ACTIVE") {
                 $state.SSOExpirationUTC = [datetime]$session.expiresAt
