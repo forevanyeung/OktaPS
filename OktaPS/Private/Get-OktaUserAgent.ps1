@@ -14,9 +14,9 @@ Function Get-OktaUserAgent {
     [CmdletBinding()]
     param()
 
-    If(-not [string]::IsNullOrEmpty($Script:OktaConfig.UserAgentString)) {
+    If(-not [string]::IsNullOrEmpty($Script:OktaSetting.UserAgentString)) {
         Write-Verbose "Using custom user agent string"
-        Return $Script:OktaConfig.UserAgentString
+        Return $Script:OktaSetting.UserAgentString
     }
 
     $psVersion = $PSVersionTable.PSVersion.ToString()

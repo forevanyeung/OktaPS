@@ -5,6 +5,8 @@ Function Start-OktaSessionRefreshTimer {
         [int]$RefreshThresholdSeconds = 300
     )
 
+    If(-not $Script:OktaSetting.RefreshTimerExperimental) { return }
+
     Stop-OktaSessionRefreshTimer
 
     $timer = [System.Timers.Timer]::new($CheckIntervalSeconds * 1000)

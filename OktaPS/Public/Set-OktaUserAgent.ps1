@@ -8,5 +8,5 @@ Function Set-OktaUserAgent {
     )
 
     Write-Verbose "Setting custom user agent string: $UserAgent"
-    $Script:OktaConfig.UserAgentString = [String]::IsNullOrEmpty($UserAgent) ? $null : $UserAgent
+    $Script:OktaSetting.UserAgentString = [String]::IsNullOrEmpty($UserAgent) ? $null : $UserAgent
 }

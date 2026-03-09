@@ -1,5 +1,6 @@
-$Script:OktaAuth   = [hashtable]::Synchronized(@{})
-$Script:OktaConfig = [hashtable]::Synchronized(@{
-    SuppressAdminAPIWarning = $false
-    UserAgentString         = $null
+$Script:OktaAuth    = [hashtable]::Synchronized(@{})
+$Script:OktaSetting = [hashtable]::Synchronized(@{
+    SuppressAdminAPIWarning  = $false
+    UserAgentString          = $null
+    RefreshTimerExperimental = $false
 })
