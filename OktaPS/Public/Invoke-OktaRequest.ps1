@@ -5,7 +5,7 @@ Function Invoke-OktaRequest {
         [String]
         $Method = "GET",
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, Position = 0)]
         [String]
         $Endpoint,
 
@@ -34,7 +34,7 @@ Function Invoke-OktaRequest {
     $built_headers = @{}
 
     # Check cache for valid session cookies and expiration
-    If($Script:OktaSSO) {
+    If($Script:OktaAuth.SSO) {
         If(-not (Test-OktaAuthentication)) {
             Update-OktaAuthentication
         }
@@ -42,10 +42,12 @@ Function Invoke-OktaRequest {
         Connect-Okta
     }
 
-    $webrequest_parameters['WebSession'] = $Script:OktaSSO
+    $webrequest_parameters['Method'] = $Method
+    $webrequest_parameters['WebSession'] = $Script:OktaAuth.SSO
+    $webrequest_parameters['SkipHeaderValidation'] = $True
 
-    If($Script:OktaXSRF) {
-        $built_headers['X-Okta-XsrfToken'] = $Script:OktaXSRF
+    If($Script:OktaAuth.XSRF) {
+        $built_headers['X-Okta-XsrfToken'] = $Script:OktaAuth.XSRF
     }
 
     # Query parameters
@@ -67,24 +69,34 @@ Function Invoke-OktaRequest {
         $webrequest_parameters['Body'] = $Body | ConvertTo-Json -Depth 99
     }
 
+    # Add User-Agent header
+    if (-not $built_headers.ContainsKey('User-Agent')) {
+        $built_headers['User-Agent'] = Get-OktaUserAgent
+    }
+
     # Build request headers
     Foreach($k in $Headers.Keys) {
         $built_headers[$k] = $Headers[$k]
         Write-Debug "Adding header to request ${k}: $Headers[$k]"
     }
 
+    $webrequest_parameters['Headers'] = $built_headers
+
     # Request
     # TODO: Add ability to send request to OktaDomain or OktaAdminDomain (default)
-    $request_uri = "$Script:OktaAdminDomain/$Endpoint"
+    $request_uri = "$($Script:OktaAuth.AdminDomain)/$Endpoint"
+    $webrequest_parameters['Uri'] = $request_uri
 
     if ($PSCmdlet.ShouldProcess($request_uri)) {
         # supports pagination
         $next = $True
         $return = while($next) {
-            $Script:OktaDebugLastRequestUri = $request_uri
+            $Script:OktaAuth.DebugLastRequestUri = $webrequest_parameters['Uri']
             try {
-                $response = Invoke-WebRequest -Method $Method -Uri $request_uri -Headers $built_headers -SkipHeaderValidation @webrequest_parameters
+                Write-Debug ($webrequest_parameters | ConvertTo-Json -Depth 10)
+                $response = Invoke-WebRequest @webrequest_parameters
             } catch [Microsoft.PowerShell.Commands.HttpResponseException] {
+                Write-Error "Status code: $($_.Exception.Response.StatusCode.value__)"
                 If($_.Exception.Response.StatusCode -eq 429) {
                     Write-Debug "X-Rate-Limit-Limit: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Limit'))"
                     Write-Debug "X-Rate-Limit-Remaining: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Remaining'))"
@@ -96,6 +108,8 @@ Function Invoke-OktaRequest {
 
                     # TODO: wait until time elapses and continue
                     Start-Sleep -Seconds $offset
+                } else {
+                    Throw $_
                 }
             } catch {
                 Write-Host "Unknown error occurred."
@@ -116,7 +130,9 @@ Function Invoke-OktaRequest {
 
             # pagination
             If($response.RelationLink.ContainsKey('next') -and ($NoPagination -eq $False)) {
-                $request_uri = $response.RelationLink['next']
+                $nextUri = [uri]$response.RelationLink['next']
+                $nextPath = $nextUri.PathAndQuery
+                $webrequest_parameters['Uri'] = "$($Script:OktaAuth.AdminDomain)/$nextPath"
             } else {
                 $next = $False
             }

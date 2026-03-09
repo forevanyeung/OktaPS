@@ -46,7 +46,7 @@ Function Connect-Okta {
         $Port = 8080,
 
         # Okta admin credentials
-        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'CredentialAuth')]
         [PSCredential]
         $Credential,
 
@@ -78,53 +78,60 @@ Function Connect-Okta {
 
     Switch($PSCmdlet.ParameterSetName) {
         "SavedConfig" {
-            # Default to authorization code method
-            $AuthFlow = "AuthorizationCode"
+            # Default to credential method
+            $AuthFlow = "Credential"
 
-            $oktaYAMLPath = Get-OktaConfig -Path $Config
+            $oktaYAMLPath = Get-OktaConfig -Path $Config -ErrorAction SilentlyContinue
             If([String]::IsNullOrEmpty($oktaYAMLPath)) {
-                Return
+                Break
             }
 
             Write-Verbose "Connecting to Okta using config file: $oktaYAMLPath"
 
             $yaml = Get-Content $oktaYAMLPath | ConvertFrom-Yaml
-            $yamlConfig = $yaml.okta.client
+            $authConfig = $yaml.okta.client
+            $settingsConfig = $yaml.okta.settings
 
-            If($yamlConfig.authorizationMode -eq "PrivateKey") {
+            If($authConfig.authorizationMode -eq "PrivateKey") {
                 $AuthFlow = "PrivateKey"
 
-                $OrgUrl = $yamlConfig.orgUrl
-                $ClientId = $yamlConfig.clientId
-                $Scopes = $yamlConfig.scopes
-                $PrivateKey = $yamlConfig.privateKey
+                $OrgUrl = $authConfig.orgUrl
+                $ClientId = $authConfig.clientId
+                $Scopes = $authConfig.scopes
+                $PrivateKey = $authConfig.privateKey
 
-            } ElseIf($yamlConfig.authorizationMode -eq "AuthorizationCode") {
+            } ElseIf($authConfig.authorizationMode -eq "AuthorizationCode") {
                 $AuthFlow = "AuthorizationCode"
 
-                $OrgUrl = $yamlConfig.orgUrl
-                $ClientId = $yamlConfig.clientId
-                $Scopes = $yamlConfig.scopes
+                $OrgUrl = $authConfig.orgUrl
+                $ClientId = $authConfig.clientId
+                $Scopes = $authConfig.scopes
 
-                If($yamlConfig.port) {
-                    $Port = $yamlConfig.port
+                If($authConfig.port) {
+                    $Port = $authConfig.port
                 }
     
-            } ElseIf(($yamlConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($yamlConfig.token))) {
+            } ElseIf(($authConfig.authorizationMode -eq "SSWS") -or (-not [String]::IsNullOrEmpty($authConfig.token))) {
                 $AuthFlow = "SSWS"
 
-                $OrgUrl = $yamlConfig.orgUrl
-                $API = $yamlConfig.token
+                $OrgUrl = $authConfig.orgUrl
+                $API = $authConfig.token
     
-            } ElseIf(-not [String]::IsNullOrEmpty($yamlConfig.username)) {
+            } ElseIf(-not [String]::IsNullOrEmpty($authConfig.username)) {
                 $AuthFlow = "Credential"
 
-                $OrgUrl = $yamlConfig.orgUrl
-                $Credential = Get-Credential $yamlConfig.username
+                $OrgUrl = $authConfig.orgUrl
+                $Credential = Get-Credential $authConfig.username
 
             } Else {
-                Write-Error "Unknown authorization mode: $($yamlConfig.authorizationMode)"
-                Write-Error "Defaulting to authorization code method"
+                Write-Error "Unknown authorization mode: $($authConfig.authorizationMode)"
+                Write-Error "Defaulting to credential method"
+            }
+
+            If($settingsConfig) {
+                foreach($s in $settingsConfig.GetEnumerator()) {
+                    $Script:OktaSetting[$s.Key] = $s.Value
+                }
             }
         }
 
@@ -179,12 +186,27 @@ Function Connect-Okta {
         }
 
         "Credential" {
-            Write-Verbose "Using Credential auth method"
-            Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
+            # Credential auth requires user interaction, so check if in noninteractive mode
+            If(-not [Environment]::UserInteractive) {
+                Write-Error "Credential auth requires an interactive shell, use Authorization Code auth instead."
+            }
 
-            $saveConfig = @{
-                orgUrl = $OrgUrl
-                username = $Credential.UserName
+            If([String]::IsNullOrEmpty($OrgUrl)) {
+                $OrgUrl = Read-Host "Enter Okta domain (with https://)"
+            }
+            
+            #TODO: switch to IDX by default, use classic only if explicitly specified in yaml
+            If($authConfig.classic) {
+                Write-Verbose "Using Credential (Classic) auth method"
+                Connect-OktaCredential -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
+            } else {
+                Write-Verbose "Using Credential (OIE) auth method"
+                Connect-OktaIDX -OktaDomain $OrgUrl -Credential $Credential -ErrorAction Stop
+
+                $saveConfig = @{
+                    orgUrl = $OrgUrl
+                    username = $Credential.UserName
+                }
             }
         }
 
@@ -193,7 +215,8 @@ Function Connect-Okta {
         }
     }
 
-    Write-Host "Connected to $Script:OktaDomain"
+    #TODO: fix
+    Write-Host "Connected to $($Script:OktaAuth.Domain)"
 
     If($Save) {
         Set-OktaConfig -Path $SavePath -Config $saveConfig
