@@ -1,9 +1,34 @@
 # Authentication
 
 ## Authentication Methods
-There are 3 supported authentication methods for OktaPS, Authorization Code, PrivateKey, and API key. The Credential method has been deprecated until there is better support for it. 
+OktaPS supports multiple authentication methods including Credential, Authorization Code, PrivateKey, 
+and API key. Credential auth is recommended and mimics the process your browser takes. Authorization 
+Code uses an OIDC flow and passes the authentication to your browser. PrivateKey also uses an OIDC 
+flow, but uses a secret instead of user authentication, this is recommended for machine to machine 
+flows. Authorization Code and PrivateKey require prerequisite OIDC setup in Okta Admin prior to first 
+use. API key is also supported.
 
-### Authorization Code (Recommended)
+### Credential (Recommended)
+Credential authentication has been updated to work with Identity Engine (OIE). Credential auth
+emulates the same requests your browser would make to Okta. This is the simplest to set up, 
+and gives you the same access you have on the Okta Admin dashboard. 
+
+For backward-compatibility to Classic engine, specify `classic: true` in your yaml config. Note, 
+support for Classic orgs is not actively being tested as I do not have access to a Classic org.
+
+```pwsh
+Connect-Okta -OktaDomain "https://dev-8675309.okta.com" -Credential "anna.unstoppable"
+```
+
+```yml
+okta:
+  client:
+    orgUrl: https://dev-8675309.okta.com
+    authorizationMode: Credential
+    username: anna.unstoppable
+```
+
+### Authorization Code
 Authorization code uses OAuth 2.0 to authenticate 
 This is not compatible with Okta's SDK YAML config. 
 
@@ -79,27 +104,6 @@ okta:
     orgUrl: https://dev-8675309.okta.com
     authorizationMode: "SSWS"
     token: 00A...G
-```
-
-### Credential
-🚧 Under construction 🚧  
-Credential authentication has been updated to work with Identity Engine (OIE). Credential auth
-emulates the same requests your browser would make to Okta. This is the simplest to set up, 
-and gives you the same access you have on the web. 
-
-For backward-compatibility to Classic engine, specify `classic: true` in your yaml config. Note, 
-support for Classic orgs is not actively being tested as I do not have access to a Classic org.
-
-```pwsh
-Connect-Okta -OktaDomain "https://dev-8675309.okta.com" -Credential "anna.unstoppable"
-```
-
-```yml
-okta:
-  client:
-    orgUrl: https://dev-8675309.okta.com
-    authorizationMode: Credential
-    username: anna.unstoppable
 ```
 
 ## YAML Configuration
