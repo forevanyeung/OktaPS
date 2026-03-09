@@ -1,0 +1,7 @@
+{
+    "features": {
+        "ghcr.io/devcontainers/features/powershell:2": {
+            "modules": "powershell-yaml,PKCE" 
+        }
+    }
+}

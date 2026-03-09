@@ -1,7 +1,6 @@
 Function Set-OktaAuthentication {
     [CmdletBinding(DefaultParameterSetName = "SSWS")]
     param (
-        # Parameter help description
         [Parameter(Mandatory)]
         [ValidateSet("SSWS", "PrivateKey", "Credential", "AuthorizationCode")]
         [String]
@@ -12,32 +11,26 @@ Function Set-OktaAuthentication {
         [Microsoft.PowerShell.Commands.WebRequestSession]
         $Session,
 
-        # Parameter help description
         [Parameter(Mandatory)]
         [String]
         $Domain,
 
-        # Parameter help description
         [Parameter(ParameterSetName="OAuth", Mandatory)]
         [String]
         $ClientId,
 
-        # Parameter help description
         [Parameter(ParameterSetName="OAuth", Mandatory)]
         [String]
         $Token,
 
-        # Parameter help description
         [Parameter(ParameterSetName="OAuth")]
         [String]
         $RefreshToken,
 
-        # Parameter help description
         [Parameter(ParameterSetName="OAuth", Mandatory)]
         [Int32]
         $ExpiresIn,
 
-        # Parameter help description
         [Parameter(ParameterSetName="Credentials", Mandatory)]
         [System.DateTime]
         $ExpiresAt,
@@ -47,57 +40,54 @@ Function Set-OktaAuthentication {
         $Username
     )
 
-    $Script:OktaAuthorizationMode = $AuthorizationMode
-    Write-Verbose "Setting OktaAuthorizationMode to $Script:OktaAuthorizationMode"
+    $Script:OktaAuth.AuthorizationMode = $AuthorizationMode
+    Write-Verbose "Setting AuthorizationMode to $($Script:OktaAuth.AuthorizationMode)"
 
-    $Script:OktaDomain = $Domain
-    Write-Verbose "Setting OktaDomain to $Script:OktaDomain"
-    
+    $Script:OktaAuth.Domain = $Domain
+    Write-Verbose "Setting Domain to $($Script:OktaAuth.Domain)"
+
     $Uri = [System.Uri]$Domain
-    $domainParts = $Uri.Host.Split('.')
-    $Script:OktaOrg = $domainParts[0]
-    Write-Verbose "Setting OktaOrg to $Script:OktaOrg"
+    $Script:OktaAuth.Org = $Uri.Host.Split('.')[0]
+    Write-Verbose "Setting Org to $($Script:OktaAuth.Org)"
 
-    $Script:OktaAdminDomain = Get-OktaAdminDomain -Domain $Domain
-    Write-Verbose "Setting OktaAdminDomain to $Script:OktaAdminDomain"
+    $Script:OktaAuth.AdminDomain = Get-OktaAdminDomain -Domain $Domain
+    Write-Verbose "Setting AdminDomain to $($Script:OktaAuth.AdminDomain)"
 
     If($PSCmdlet.ParameterSetName -eq "OAuth") {
-        # use IWR to create a web session variable
-        $null = Invoke-WebRequest -Uri $OktaDomain -SessionVariable OktaSSO
+        $null = Invoke-WebRequest -Uri $Domain -SessionVariable OktaSSO
         $OktaSSO.Headers.Add("Authorization", "Bearer $Token")
-        $Script:OktaSSO = $OktaSSO
-        Write-Verbose "Creating OktaSSO web session and adding Bearer authentication header"
+        $Script:OktaAuth.SSO = $OktaSSO
+        Write-Verbose "Creating SSO web session and adding Bearer authentication header"
 
-        $Script:OktaOAuthClientId = $ClientId
-        Write-Verbose "Setting OktaOAuthClientId to $Script:OktaOAuthClientId"
+        $Script:OktaAuth.OAuthClientId = $ClientId
+        Write-Verbose "Setting OAuthClientId to $($Script:OktaAuth.OAuthClientId)"
 
-        $Script:OktaOAuthToken = ConvertTo-SecureString -String $Token -AsPlainText -Force
-        Write-Verbose "Setting OktaOAuthToken"
+        $Script:OktaAuth.OAuthToken = ConvertTo-SecureString -String $Token -AsPlainText -Force
+        Write-Verbose "Setting OAuthToken"
 
-        $Script:OktaOAuthRefreshToken = $RefreshToken ? (ConvertTo-SecureString -String $RefreshToken -AsPlainText -Force) : ""
-        Write-Verbose "Setting OktaOAuthRefreshToken"
+        $Script:OktaAuth.OAuthRefreshToken = $RefreshToken ? (ConvertTo-SecureString -String $RefreshToken -AsPlainText -Force) : ""
+        Write-Verbose "Setting OAuthRefreshToken"
 
-        $expiration = (Get-Date).AddSeconds($ExpiresIn).ToUniversalTime()
-        $Script:OktaSSOExpirationUTC = $expiration
-        Write-Verbose "Setting OktaSSOExpirationUTC to $Script:OktaSSOExpirationUTC"
+        $Script:OktaAuth.SSOExpirationUTC = (Get-Date).AddSeconds($ExpiresIn).ToUniversalTime()
+        Write-Verbose "Setting SSOExpirationUTC to $($Script:OktaAuth.SSOExpirationUTC)"
     }
 
     If($PSCmdlet.ParameterSetName -eq "SSWS") {
-        $Script:OktaSSO = $Session
-        Write-Verbose "Setting OktaSSO web session"
+        $Script:OktaAuth.SSO = $Session
+        Write-Verbose "Setting SSO web session"
 
-        $Script:OktaSSOExpirationUTC = [datetime]::MaxValue
-        Write-Verbose "Setting OktaSSOExpirationUTC to max"
+        $Script:OktaAuth.SSOExpirationUTC = [datetime]::MaxValue
+        Write-Verbose "Setting SSOExpirationUTC to max"
     }
 
     If($PSCmdlet.ParameterSetName -eq "Credentials") {
-        $Script:OktaSSO = $Session
-        Write-Verbose "Setting OktaSSO web session"
+        $Script:OktaAuth.SSO = $Session
+        Write-Verbose "Setting SSO web session"
 
-        $Script:OktaSSOExpirationUTC = $ExpiresAt
-        Write-Verbose "Setting OktaSSOExpirationUTC to $Script:OktaSSOExpirationUTC"
+        $Script:OktaAuth.SSOExpirationUTC = $ExpiresAt
+        Write-Verbose "Setting SSOExpirationUTC to $($Script:OktaAuth.SSOExpirationUTC)"
 
-        $Script:OktaUsername = $Username
-        Write-Verbose "Setting OktaUsername to $Script:OktaUsername"
+        $Script:OktaAuth.Username = $Username
+        Write-Verbose "Setting Username to $($Script:OktaAuth.Username)"
     }
 }
