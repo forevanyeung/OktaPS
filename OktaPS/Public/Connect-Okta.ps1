@@ -46,7 +46,7 @@ Function Connect-Okta {
         $Port = 8080,
 
         # Okta admin credentials
-        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'CredentialAuth')]
         [PSCredential]
         $Credential,
 
