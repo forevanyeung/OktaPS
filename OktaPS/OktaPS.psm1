@@ -3,13 +3,21 @@
 
 # Get public and private function definition files
 $ModulePath = $PSScriptRoot -eq "" ? $($pseditor.geteditorcontext().currentfile.path | split-path -parent) : $PSScriptRoot
+
+# Add Classes first so types are available when functions are parsed
+$ModuleClasses = @( Get-ChildItem -Path $ModulePath\Types\*.class.ps1 -ErrorAction SilentlyContinue )
+Foreach($class in $ModuleClasses) {
+    Write-Host "Dot sourcing class: $($class.FullName)"
+    . $class.FullName
+}
+
 $Public = @( Get-ChildItem -Path $ModulePath\Public\*.ps1 -ErrorAction SilentlyContinue )
 $Private = @( Get-ChildItem -Path $ModulePath\Private\*.ps1 -ErrorAction SilentlyContinue )
 
 Foreach($fn in @($Public + $Private)) {
     Try {
         Write-Host "Importing function: $($fn.FullName)"
-        
+
         # Dot source the functions
         . $fn.FullName
 
@@ -17,7 +25,7 @@ Foreach($fn in @($Public + $Private)) {
         Export-ModuleMember -Function $fn.BaseName -ErrorAction SilentlyContinue
     } Catch {
         Write-Error -Message "Failed to import function $($fn.FullName): $_"
-    }   
+    }
 }
 
 # Add Types
@@ -32,13 +40,6 @@ $ModuleFormats = @( Get-ChildItem -Path $ModulePath\Types\*.format.ps1xml -Error
 Foreach($f in $ModuleFormats) {
     Write-Host "Appending format data: $($f.FullName)"
     Update-FormatData -PrependPath $f
-}
-
-# Add Classes
-$ModuleClasses = @( Get-ChildItem -Path $ModulePath\Types\*.class.ps1 -ErrorAction SilentlyContinue )
-Foreach($class in $ModuleClasses) {
-    Write-Host "Dot sourcing class: $($class.FullName)"
-    . $class.FullName
 }
 
 # Import dependency modules
