@@ -36,8 +36,16 @@ Function Get-OktaGroup {
         
         "GetGroup" {
             # try matching group id
-            $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/$Name" -ErrorAction SilentlyContinue
-            If(-not $group) {
+            If($Name -like "00g*") {
+                try {
+                    $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups/$Name" -ErrorAction Stop
+                } catch {
+                    # not a valid id, fall through to name search
+                }
+                Write-Verbose "Tried Id search, nothing found."
+            }
+
+            If(-not $group) {   
                 # try matching group name
                 $query["q"] = $Name
                 $group = Invoke-OktaRequest -Method "GET" -Endpoint "/api/v1/groups" -Query $query -ErrorAction SilentlyContinue
