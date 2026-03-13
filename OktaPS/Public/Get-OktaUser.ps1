@@ -55,6 +55,7 @@ Function Get-OktaUser {
                 try {
                     $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
                 } catch {
+                    Write-Error "Could not find user $i"
                     Continue
                 }
 
