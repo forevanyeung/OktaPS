@@ -21,8 +21,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug ownership
+        run: |
+          echo "Current user: $(id)"
+          echo "Workspace: $GITHUB_WORKSPACE"
+          echo "Workspace owner: $(stat -c '%u:%g' $GITHUB_WORKSPACE)"
+
       - name: Fix workspace ownership for gitversion
-        run: chown -R $(id -u):$(id -g) ${{ github.workspace }}
+        run: chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
 
       - name: Install InvokeBuild module
         shell: pwsh
