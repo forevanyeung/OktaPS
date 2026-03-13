@@ -26,14 +26,15 @@ jobs:
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module InvokeBuild
+      
+      - name: Install GitVersion tool
+        uses: gittools/actions/gitversion/setup@71a79f7569b981036febd9ce5870f87e069928e7 #v4.3.3
+        with:
+          versionSpec: '6.6.x'
 
       - name: Determine Version
         id: gitversion
-        shell: pwsh
-        run: |
-          dotnet tool install --global GitVersion.Tool
-          $version = dotnet-gitversion /output json | ConvertFrom-Json
-          echo "MajorMinorPatch=$($version.MajorMinorPatch)" >> $env:GITHUB_OUTPUT
+        uses: gittools/actions/gitversion/execute@71a79f7569b981036febd9ce5870f87e069928e7 #v4.3.3
 
       - name: Tag release
         run: |
