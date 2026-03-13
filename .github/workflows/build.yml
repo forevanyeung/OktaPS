@@ -21,6 +21,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory ${{ github.workspace }}
+
       - name: Install InvokeBuild module
         shell: pwsh
         run: |
