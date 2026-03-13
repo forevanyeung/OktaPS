@@ -17,7 +17,11 @@ Function Get-OktaApp {
     If($PSCmdlet.ParameterSetName -like "ByApp") {
         # attempt Id search, fail attempt Name search
         If($App -like "0oa*") {
-            $response = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/apps/$App" -ErrorAction SilentlyContinue
+            try {
+                $response = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/apps/$App" -ErrorAction Stop
+            } catch {
+                # not a valid id, fall through to name search
+            }
             Write-Verbose "Tried Id search, nothing found."
         }
 

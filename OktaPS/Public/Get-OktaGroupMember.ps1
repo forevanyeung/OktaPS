@@ -1,7 +1,7 @@
 Function Get-OktaGroupMember {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
         [OktaGroup]
         $Group
     )

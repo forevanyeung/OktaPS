@@ -50,11 +50,11 @@ Function Get-OktaUser {
     }
 
     switch ($PsCmdlet.ParameterSetName) {
-        "GetUser" { 
+        "GetUser" {
             $user_query = Foreach($i in $Identity) {
-                $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
-
-                If($null -eq $query) {
+                try {
+                    $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
+                } catch {
                     Write-Error "Could not find user $i"
                     Continue
                 }
@@ -96,17 +96,12 @@ Function Get-OktaUser {
         }
 
         "AllUsers" {
-            $url_builder = @{}
-            $url_builder['limit'] = 200
-            $querystring = New-HttpQueryString -QueryParameter $url_builder
-            
-            $user_query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
+            $querystring = New-HttpQueryString -QueryParameter @{ limit = 200 }
+            $user_query = @(Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop)
 
             If($IncludeDeprovisioned) {
-                $url_builder['filter'] = 'status eq "DEPROVISIONED"'
-                $querystring = New-HttpQueryString -QueryParameter $url_builder
-
-                $user_query += Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop
+                $querystring = New-HttpQueryString -QueryParameter @{ limit = 200; filter = 'status eq "DEPROVISIONED"' }
+                $user_query += @(Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users?$querystring" @request_args -ErrorAction Stop)
             }
         }
     }
