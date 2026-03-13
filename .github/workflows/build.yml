@@ -11,6 +11,8 @@ jobs:
   build:
     name: Build module
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     container:
       image: mcr.microsoft.com/dotnet/sdk:latest
     steps:
@@ -26,13 +28,25 @@ jobs:
           Install-Module InvokeBuild
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.10.2
+        uses: gittools/actions/gitversion/setup@v3
         with:
-          versionSpec: '5.12.0'
+          versionSpec: '6.x'
 
       - name: Determine Version
         id:   gitversion # id to later be referenced
-        uses: gittools/actions/gitversion/execute@v0.10.2
+        uses: gittools/actions/gitversion/execute@v3
+
+      - name: Tag release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="v${{ steps.gitversion.outputs.MajorMinorPatch }}"
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists, skipping."
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
 
       - name: Perform an Invoke-Build from the command line
         shell: pwsh

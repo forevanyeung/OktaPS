@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install required Powershell modules
         shell: pwsh
@@ -57,4 +59,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git diff-index --quiet HEAD || git commit -m "action: update documentation" && git push
+          VERSION=$(git -C $GITHUB_WORKSPACE describe --tags --abbrev=0 2>/dev/null || echo "unversioned")
+          git diff-index --quiet HEAD || git commit -m "action: update documentation $VERSION" && git push
