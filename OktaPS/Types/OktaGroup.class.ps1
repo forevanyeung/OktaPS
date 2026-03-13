@@ -17,8 +17,15 @@ class OktaGroup {
     [GroupType]          $type
     [string[]]           $source
     
-    OktaUser([string]$name) {
-        Get-OktaGroup -Name $name -ErrorAction Stop
+    OktaGroup([string]$name) {
+        $that = Get-OktaGroup -Name $name -ErrorAction Stop
+        foreach($key in $that.psobject.properties.name) {
+            try {
+                $this.$key = $that.$key
+            } catch {
+                $this | Add-Member -NotePropertyName $key -NotePropertyValue $that.$key
+            }
+        }
     }
 
     OktaGroup([object]$hashtable) {

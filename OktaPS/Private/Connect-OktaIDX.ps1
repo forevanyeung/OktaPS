@@ -44,7 +44,7 @@ Function Connect-OktaIDX {
 
     $idxStatus = 0
     $customUriOnce = $true
-    $loopbackChallengeOnce = $true
+    $lastChallengeRequest = $null
     $i = 0
     :idx while($idxForm) {
         $res = Invoke-IDXForm -IDXForm $idxForm -Value $idxValue -WebSession $OktaSSO
@@ -69,7 +69,6 @@ Function Connect-OktaIDX {
 
         If($idx.psobject.Properties.name -contains "success") {
             # device polling success, clean up
-            [Console]::TreatControlCAsInput = $false
             Write-Progress -Complete
 
             $success = Invoke-WebRequest -Uri $idx.success.href -WebSession $OktaSSO
@@ -116,7 +115,7 @@ Function Connect-OktaIDX {
 
                 :challenge switch ($relatesTo.challengeMethod) {
                     'LOOPBACK' {
-                        if ($loopbackChallengeOnce) {
+                        if ($relatesTo.challengeRequest -ne $lastChallengeRequest) {
                             [int]$timeout = [Math]::Ceiling($relatesTo.probeTimeoutMillis / 1000)
                             foreach ($port in $relatesTo.ports) {
                                 # GET domain:port/probe
@@ -133,11 +132,11 @@ Function Connect-OktaIDX {
 
                                 # POST domain:port/challengeRequest async so polling can happen in the main loop
                                 Write-Verbose "Sending challenge request to $port"
-                                $challengeJob = Start-ThreadJob -ScriptBlock {
+                                $challengeJob = Start-ThreadJob -StreamingHost $Host -ScriptBlock {
                                     $uri = "$(($using:relatesTo).domain):$($using:port)/challenge"
                                     $headers = @{
                                         'Content-Type' = "application/json"
-                                        'Origin' = $using:OktaDomain
+                                        'Origin'       = $using:OktaDomain
                                     }
 
                                     $body = @{
@@ -162,7 +161,7 @@ Function Connect-OktaIDX {
                                     Write-Verbose "Challenge complete, cleaning up job $($sender.Id)"
                                 }
 
-                                $loopbackChallengeOnce = $false
+                                $lastChallengeRequest = $relatesTo.challengeRequest
                                 
                                 # get out of foreach loop
                                 Break challenge
@@ -225,39 +224,34 @@ Function Connect-OktaIDX {
                 # 'enroll-authenticator' {}              # Enroll new MFA
                 # 'skip' {}                              # Optional step    
 
-                { ($_ -eq 'challenge-poll') -or 
-                  ($_ -eq 'device-challenge-poll') } {  # Poll for Okta Verify  
-                    # check input for ctrl+c to break out of loop and choose different factor
-                    If ($Host.UI.RawUI.KeyAvailable -and ($Key = $Host.UI.RawUI.ReadKey("AllowCtrlC,NoEcho,IncludeKeyUp"))) {
-                        # Flush the key buffer again for the next loop.
-                        $stop = [Int]$Key.Character -eq 3
-                        $Host.UI.RawUI.FlushInputBuffer()
-
-                        If ($stop) {
-                            Write-Host ""
-                            [Console]::TreatControlCAsInput = $False
-                            Write-Progress -Completed
-
-                            #TODO: check for other available factors
-
-                            #Invoke-IDXForm - cancel
-                            Write-Warning "Polling cancelled, exiting login."
-                            $res = Invoke-IDXForm -IDXForm $IDX.cancel -WebSession $OktaSSO
-                            Return
-                        }
-                    }
-
-
+                { ($_ -eq 'challenge-poll') -or
+                  ($_ -eq 'device-challenge-poll') } {  # Poll for Okta Verify
                     $dotCount = (($i - 1) % 3) + 1
-                    $status = "Press Ctrl+C to use a different factor" + "." * $dotCount
-                    Write-Progress -Activity "Waiting for Okta Verify approval" -Status $status 
-
-                    # allow stopping the loop with Ctrl+C
-                    [Console]::TreatControlCAsInput = $true
+                    $status = "Press Q to use a different factor" + "." * $dotCount
+                    Write-Progress -Activity "Waiting for Okta Verify approval" -Status $status
 
                     $refreshInterval = $remediation.refresh ?? 2000
-                    Start-Sleep -Milliseconds $refreshInterval
+                    if ($i -gt 0) {
+                        Write-Verbose "Sleeping for $refreshInterval ms"
+                        $elapsed = 0
+                        while ($elapsed -lt $refreshInterval) {
+                            Start-Sleep -Milliseconds 200
+                            $elapsed += 200
+                            if ([Console]::KeyAvailable) {
+                                $key = [Console]::ReadKey($true)
+                                if ($key.KeyChar -eq 'q' -or $key.KeyChar -eq 'Q') {
+                                    Write-Host ""
+                                    Write-Progress -Completed
 
+                                    #TODO: check for other available factors
+
+                                    Write-Warning "Polling cancelled, exiting login."
+                                    $res = Invoke-IDXForm -IDXForm $IDX.cancel -WebSession $OktaSSO
+                                    Return
+                                }
+                            }
+                        }
+                    }
                     $i++
 
                     #Invoke-IDXForm
