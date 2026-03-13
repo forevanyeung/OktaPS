@@ -46,6 +46,12 @@ Function Connect-OktaIDX {
     $customUriOnce = $true
     $loopbackChallengeOnce = $true
     $i = 0
+    $pollCancelled = $false
+    $cancelKeyHandler = [System.ConsoleCancelEventHandler]{
+        param($s, $e)
+        $e.Cancel = $true
+        $script:pollCancelled = $true
+    }
     :idx while($idxForm) {
         $res = Invoke-IDXForm -IDXForm $idxForm -Value $idxValue -WebSession $OktaSSO
         $idx = $res.idx
@@ -69,7 +75,6 @@ Function Connect-OktaIDX {
 
         If($idx.psobject.Properties.name -contains "success") {
             # device polling success, clean up
-            [Console]::TreatControlCAsInput = $false
             Write-Progress -Complete
 
             $success = Invoke-WebRequest -Uri $idx.success.href -WebSession $OktaSSO
@@ -133,11 +138,11 @@ Function Connect-OktaIDX {
 
                                 # POST domain:port/challengeRequest async so polling can happen in the main loop
                                 Write-Verbose "Sending challenge request to $port"
-                                $challengeJob = Start-ThreadJob -ScriptBlock {
+                                $challengeJob = Start-ThreadJob -StreamingHost $Host -ScriptBlock {
                                     $uri = "$(($using:relatesTo).domain):$($using:port)/challenge"
                                     $headers = @{
                                         'Content-Type' = "application/json"
-                                        'Origin' = $using:OktaDomain
+                                        'Origin'       = $using:OktaDomain
                                     }
 
                                     $body = @{
@@ -162,6 +167,7 @@ Function Connect-OktaIDX {
                                     Write-Verbose "Challenge complete, cleaning up job $($sender.Id)"
                                 }
 
+                                Write-Verbose "Set loopbackChallengeOnce, False"
                                 $loopbackChallengeOnce = $false
                                 
                                 # get out of foreach loop
@@ -225,39 +231,31 @@ Function Connect-OktaIDX {
                 # 'enroll-authenticator' {}              # Enroll new MFA
                 # 'skip' {}                              # Optional step    
 
-                { ($_ -eq 'challenge-poll') -or 
-                  ($_ -eq 'device-challenge-poll') } {  # Poll for Okta Verify  
-                    # check input for ctrl+c to break out of loop and choose different factor
-                    If ($Host.UI.RawUI.KeyAvailable -and ($Key = $Host.UI.RawUI.ReadKey("AllowCtrlC,NoEcho,IncludeKeyUp"))) {
-                        # Flush the key buffer again for the next loop.
-                        $stop = [Int]$Key.Character -eq 3
-                        $Host.UI.RawUI.FlushInputBuffer()
+                { ($_ -eq 'challenge-poll') -or
+                  ($_ -eq 'device-challenge-poll') } {  # Poll for Okta Verify
+                    if ($pollCancelled) {
+                        Write-Host ""
+                        Write-Progress -Completed
 
-                        If ($stop) {
-                            Write-Host ""
-                            [Console]::TreatControlCAsInput = $False
-                            Write-Progress -Completed
+                        #TODO: check for other available factors
 
-                            #TODO: check for other available factors
-
-                            #Invoke-IDXForm - cancel
-                            Write-Warning "Polling cancelled, exiting login."
-                            $res = Invoke-IDXForm -IDXForm $IDX.cancel -WebSession $OktaSSO
-                            Return
-                        }
+                        #Invoke-IDXForm - cancel
+                        Write-Warning "Polling cancelled, exiting login."
+                        $res = Invoke-IDXForm -IDXForm $IDX.cancel -WebSession $OktaSSO
+                        Return
                     }
-
 
                     $dotCount = (($i - 1) % 3) + 1
                     $status = "Press Ctrl+C to use a different factor" + "." * $dotCount
-                    Write-Progress -Activity "Waiting for Okta Verify approval" -Status $status 
-
-                    # allow stopping the loop with Ctrl+C
-                    [Console]::TreatControlCAsInput = $true
+                    Write-Progress -Activity "Waiting for Okta Verify approval" -Status $status
 
                     $refreshInterval = $remediation.refresh ?? 2000
-                    Start-Sleep -Milliseconds $refreshInterval
-
+                    if ($i -gt 0) {
+                        Write-Verbose "Sleeping for $refreshInterval ms"
+                        [Console]::add_CancelKeyPress($cancelKeyHandler)
+                        Start-Sleep -Milliseconds $refreshInterval
+                        [Console]::remove_CancelKeyPress($cancelKeyHandler)
+                    }
                     $i++
 
                     #Invoke-IDXForm
