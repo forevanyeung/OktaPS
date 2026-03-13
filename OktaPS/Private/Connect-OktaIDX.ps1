@@ -46,12 +46,6 @@ Function Connect-OktaIDX {
     $customUriOnce = $true
     $lastChallengeRequest = $null
     $i = 0
-    $pollCancelled = $false
-    $cancelKeyHandler = [System.ConsoleCancelEventHandler]{
-        param($s, $e)
-        $e.Cancel = $true
-        $script:pollCancelled = $true
-    }
     :idx while($idxForm) {
         $res = Invoke-IDXForm -IDXForm $idxForm -Value $idxValue -WebSession $OktaSSO
         $idx = $res.idx
@@ -232,28 +226,31 @@ Function Connect-OktaIDX {
 
                 { ($_ -eq 'challenge-poll') -or
                   ($_ -eq 'device-challenge-poll') } {  # Poll for Okta Verify
-                    if ($pollCancelled) {
-                        Write-Host ""
-                        Write-Progress -Completed
-
-                        #TODO: check for other available factors
-
-                        #Invoke-IDXForm - cancel
-                        Write-Warning "Polling cancelled, exiting login."
-                        $res = Invoke-IDXForm -IDXForm $IDX.cancel -WebSession $OktaSSO
-                        Return
-                    }
-
                     $dotCount = (($i - 1) % 3) + 1
-                    $status = "Press Ctrl+C to use a different factor" + "." * $dotCount
+                    $status = "Press Q to use a different factor" + "." * $dotCount
                     Write-Progress -Activity "Waiting for Okta Verify approval" -Status $status
 
                     $refreshInterval = $remediation.refresh ?? 2000
                     if ($i -gt 0) {
                         Write-Verbose "Sleeping for $refreshInterval ms"
-                        [Console]::add_CancelKeyPress($cancelKeyHandler)
-                        Start-Sleep -Milliseconds $refreshInterval
-                        [Console]::remove_CancelKeyPress($cancelKeyHandler)
+                        $elapsed = 0
+                        while ($elapsed -lt $refreshInterval) {
+                            Start-Sleep -Milliseconds 200
+                            $elapsed += 200
+                            if ([Console]::KeyAvailable) {
+                                $key = [Console]::ReadKey($true)
+                                if ($key.KeyChar -eq 'q' -or $key.KeyChar -eq 'Q') {
+                                    Write-Host ""
+                                    Write-Progress -Completed
+
+                                    #TODO: check for other available factors
+
+                                    Write-Warning "Polling cancelled, exiting login."
+                                    $res = Invoke-IDXForm -IDXForm $IDX.cancel -WebSession $OktaSSO
+                                    Return
+                                }
+                            }
+                        }
                     }
                     $i++
 
