@@ -45,6 +45,9 @@ Function Invoke-OktaRequest {
     $webrequest_parameters['Method'] = $Method
     $webrequest_parameters['WebSession'] = $Script:OktaAuth.SSO
     $webrequest_parameters['SkipHeaderValidation'] = $True
+    #TODO: can decrease request duration, need more testing, will need to bump mininum
+    #pwsh version to 7.4
+    #$webrequest_parameters['ProgressAction'] = "SilentlyContinue"
 
     If($Script:OktaAuth.XSRF) {
         $built_headers['X-Okta-XsrfToken'] = $Script:OktaAuth.XSRF
