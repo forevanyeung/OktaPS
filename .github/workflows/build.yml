@@ -21,8 +21,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Mark repo as safe for git
-        run: git config --system --add safe.directory ${{ github.workspace }}
+      - name: Fix workspace ownership for gitversion
+        run: chown -R $(id -u):$(id -g) ${{ github.workspace }}
 
       - name: Install InvokeBuild module
         shell: pwsh
