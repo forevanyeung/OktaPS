@@ -50,12 +50,11 @@ Function Get-OktaUser {
     }
 
     switch ($PsCmdlet.ParameterSetName) {
-        "GetUser" { 
+        "GetUser" {
             $user_query = Foreach($i in $Identity) {
-                $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
-
-                If($null -eq $query) {
-                    Write-Error "Could not find user $i"
+                try {
+                    $query = Invoke-OktaRequest -Method "GET" -Endpoint "api/v1/users/$i" @request_args -ErrorAction Stop
+                } catch {
                     Continue
                 }
 
