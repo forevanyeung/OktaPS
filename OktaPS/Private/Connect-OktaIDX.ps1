@@ -44,7 +44,7 @@ Function Connect-OktaIDX {
 
     $idxStatus = 0
     $customUriOnce = $true
-    $loopbackChallengeOnce = $true
+    $lastChallengeRequest = $null
     $i = 0
     $pollCancelled = $false
     $cancelKeyHandler = [System.ConsoleCancelEventHandler]{
@@ -121,7 +121,7 @@ Function Connect-OktaIDX {
 
                 :challenge switch ($relatesTo.challengeMethod) {
                     'LOOPBACK' {
-                        if ($loopbackChallengeOnce) {
+                        if ($relatesTo.challengeRequest -ne $lastChallengeRequest) {
                             [int]$timeout = [Math]::Ceiling($relatesTo.probeTimeoutMillis / 1000)
                             foreach ($port in $relatesTo.ports) {
                                 # GET domain:port/probe
@@ -167,8 +167,7 @@ Function Connect-OktaIDX {
                                     Write-Verbose "Challenge complete, cleaning up job $($sender.Id)"
                                 }
 
-                                Write-Verbose "Set loopbackChallengeOnce, False"
-                                $loopbackChallengeOnce = $false
+                                $lastChallengeRequest = $relatesTo.challengeRequest
                                 
                                 # get out of foreach loop
                                 Break challenge
