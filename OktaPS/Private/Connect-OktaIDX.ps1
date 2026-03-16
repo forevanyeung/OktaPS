@@ -187,13 +187,14 @@ Function Connect-OktaIDX {
                     'CUSTOM_URI' {
                         if($customUriOnce) {
                             try {
-                                Start-Process $relatesTo.href
-                            }
-                            catch {
                                 Write-Host "Please open this URL in your browser to complete authentication: "
                                 Write-Host ""
                                 Write-Host $relatesTo.href
                                 Write-Host ""
+
+                                Start-Process $relatesTo.href
+                            }
+                            catch {
                             }
                             $customUriOnce = $false
                         }
