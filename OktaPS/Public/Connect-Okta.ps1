@@ -23,7 +23,7 @@ Function Connect-Okta {
     param (
         # Okta organization url beginning with https://
         [Parameter(ParameterSetName = 'AuthorizationCodeAuth', Mandatory=$True)]
-        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True)]
+        [Parameter(ParameterSetName = 'CredentialAuth', Mandatory=$True, Position=0)]
         [Parameter(ParameterSetName = 'APIAuth', Mandatory=$True)]
         [Alias("OktaDomain")]
         [ValidatePattern("^https://", ErrorMessage="URL must begin with https://")]
