@@ -106,7 +106,7 @@ class Client {
 
 class LogDevice {
     [string]$id
-    [string]$deviceIntegrator
+    [hashtable]$deviceIntegrator
     [string]$diskEncryptionType
     [bool]$jailbreak
     [bool]$managed
@@ -119,16 +119,16 @@ class LogDevice {
 
     LogDevice([object]$hashtable) {
         $this.id = $hashtable.id
-        $this.deviceIntegrator = $hashtable.deviceIntegrator
-        $this.diskEncryptionType = $hashtable.diskEncryptionType
+        $this.deviceIntegrator = $hashtable.device_integrator
+        $this.diskEncryptionType = $hashtable.disk_encryption_type
         $this.jailbreak = $hashtable.jailbreak
         $this.managed = $hashtable.managed
         $this.name = $hashtable.name
-        $this.osPlatform = $hashtable.osPlatform
-        $this.osVersion = $hashtable.osVersion
+        $this.osPlatform = $hashtable.os_platform
+        $this.osVersion = $hashtable.os_version
         $this.registered = $hashtable.registered
-        $this.screenLockType = $hashtable.screenLockType
-        $this.secureHardwarePresent = $hashtable.secureHardwarePresent
+        $this.screenLockType = $hashtable.screen_lock_type
+        $this.secureHardwarePresent = $hashtable.secure_hardware_present
     }
 }
 
