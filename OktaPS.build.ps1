@@ -78,14 +78,10 @@ task CopyModuleManifest {
 task AssembleModule {
     Write-Host "     Creating combined module file"
 
-    Write-Host -NoNewline "     Adding check for updates to module file"
-    $CombineFiles = (Get-Content -Path "$buildFolder\Check-Updates.ps1" -Raw) + "`r`n`r`n"
-    Write-Host -ForegroundColor Green '...Complete!'
-
     $types = Join-Path $sourceFolder "Types"
     $classes = Get-ChildItem -Path $types -Filter "*.class.ps1" 
     Write-Host ""
-    $CombineFiles += "## CLASSES ## `r`n`r`n"
+    $CombineFiles = "## CLASSES ## `r`n`r`n"
     $classes | ForEach-Object {
         Write-Host "          $($_.Name)"
         $CombineFiles += (Get-content $_ -Raw) + "`r`n`r`n"
@@ -113,6 +109,8 @@ task AssembleModule {
     }
     Write-Host -NoNewline "     Combining public source files"
     Write-Host -ForegroundColor Green '...Complete!'
+
+    $CombineFiles += "## MODULE INIT ##`r`n`r`nInvoke-OktaUpdateCheck`r`n"
 
     $psm1 = Join-Path $outputFolder ($config.Module + ".psm1")
     Set-Content -Path $psm1 -Value $CombineFiles -Encoding UTF8
