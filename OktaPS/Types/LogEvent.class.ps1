@@ -106,7 +106,7 @@ class Client {
 
 class LogDevice {
     [string]$id
-    [hashtable]$deviceIntegrator
+    [string]$deviceIntegrator #TODO
     [string]$diskEncryptionType
     [bool]$jailbreak
     [bool]$managed
@@ -119,7 +119,7 @@ class LogDevice {
 
     LogDevice([object]$hashtable) {
         $this.id = $hashtable.id
-        $this.deviceIntegrator = $hashtable.device_integrator | ConvertFrom-Json
+        $this.deviceIntegrator = $hashtable.device_integrator
         $this.diskEncryptionType = $hashtable.disk_encryption_type
         $this.jailbreak = $hashtable.jailbreak
         $this.managed = $hashtable.managed
