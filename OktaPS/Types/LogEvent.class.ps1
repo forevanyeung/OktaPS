@@ -119,7 +119,7 @@ class LogDevice {
 
     LogDevice([object]$hashtable) {
         $this.id = $hashtable.id
-        $this.deviceIntegrator = $hashtable.device_integrator
+        $this.deviceIntegrator = $hashtable.device_integrator | ConvertFrom-Json
         $this.diskEncryptionType = $hashtable.disk_encryption_type
         $this.jailbreak = $hashtable.jailbreak
         $this.managed = $hashtable.managed
