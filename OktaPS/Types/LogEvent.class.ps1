@@ -236,6 +236,7 @@ class LogEvent {
     [string]$displayMessage
     [Actor]$actor
     [Client]$client
+    [LogDevice]$device
     [Request]$request
     [Outcome]$outcome
     [Target[]]$target
