@@ -25,6 +25,7 @@ Function ConvertTo-OktaLogEvent {
             actor = $actor
             target = @($target)
             client = [Client]$_.client
+            device = [LogDevice]$_.device
             request = [Request]$_.request
             outcome = [Outcome]$_.outcome
             # transaction = [Transaction]$_.transaction

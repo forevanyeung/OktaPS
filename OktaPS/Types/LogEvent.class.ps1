@@ -104,6 +104,34 @@ class Client {
     }
 }
 
+class LogDevice {
+    [string]$id
+    [string]$deviceIntegrator
+    [string]$diskEncryptionType
+    [bool]$jailbreak
+    [bool]$managed
+    [string]$name
+    [string]$osPlatform
+    [string]$osVersion
+    [bool]$registered
+    [string]$screenLockType
+    [bool]$secureHardwarePresent
+
+    LogDevice([object]$hashtable) {
+        $this.id = $hashtable.id
+        $this.deviceIntegrator = $hashtable.deviceIntegrator
+        $this.diskEncryptionType = $hashtable.diskEncryptionType
+        $this.jailbreak = $hashtable.jailbreak
+        $this.managed = $hashtable.managed
+        $this.name = $hashtable.name
+        $this.osPlatform = $hashtable.osPlatform
+        $this.osVersion = $hashtable.osVersion
+        $this.registered = $hashtable.registered
+        $this.screenLockType = $hashtable.screenLockType
+        $this.secureHardwarePresent = $hashtable.secureHardwarePresent
+    }
+}
+
 class Outcome {
     [string]$result
     [string]$reason
@@ -227,6 +255,7 @@ class LogEvent {
         $this.actor = $hashtable.actor
         $this.target = $hashtable.target
         $this.client = $hashtable.client
+        $this.device = $hashtable.device
         $this.request = $hashtable.request
         $this.outcome = $hashtable.outcome
         $this.transaction = $hashtable.transaction
