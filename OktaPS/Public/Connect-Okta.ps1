@@ -83,6 +83,11 @@ Function Connect-Okta {
 
             $oktaYAMLPath = Get-OktaConfig -Path $Config -ErrorAction SilentlyContinue
             If([String]::IsNullOrEmpty($oktaYAMLPath)) {
+                If(-not [String]::IsNullOrEmpty($Config) -and 
+                ($Config -like "https://*")) {
+                    $OrgUrl = $Config
+                }
+
                 Break
             }
 
