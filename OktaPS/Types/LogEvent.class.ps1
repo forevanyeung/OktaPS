@@ -19,6 +19,16 @@ class Actor {
     }
 }
 
+class ChangeDetails {
+    [hashtable]$from
+    [hashtable]$to
+
+    ChangeDetails([object]$hashtable) {
+        $this.from = $hashtable.from
+        $this.to = $hashtable.to
+    }
+}
+
 class Target {
     [ValidateNotNullOrEmpty()]
     [string]$id
@@ -26,6 +36,7 @@ class Target {
     [string]$alternateId
     [string]$displayName
     [object]$detailEntry
+    [ChangeDetails]$changeDetails
 
     Target([object]$hashtable) {
         $this.id = $hashtable.id
@@ -33,6 +44,7 @@ class Target {
         $this.alternateId = $hashtable.alternateId
         $this.displayName = $hashtable.displayName
         $this.detailEntry = $hashtable.detailEntry
+        $this.changeDetails = $hashtable.changeDetails
     }
 
     [string] ToString() {
@@ -61,8 +73,8 @@ class Request {
 }
 
 class Geolocation {
-    [string]$lat
-    [string]$lon
+    [double]$lat
+    [double]$lon
 
     Geolocation([object]$hashtable) {
         $this.lat = $hashtable.lat
@@ -198,12 +210,80 @@ class AuthenticationContext {
     }
 }
 
+class BotProtection {
+    [string]$level
+
+    BotProtection([object]$hashtable) {
+        $this.level = $hashtable.level
+    }
+}
+
+class IpServiceCategory {
+    [bool]$isAnonymous
+    [string]$operator
+    [string]$type
+
+    IpServiceCategory([object]$hashtable) {
+        $this.isAnonymous = $hashtable.isAnonymous
+        $this.operator = $hashtable.operator
+        $this.type = $hashtable.type
+    }
+}
+
+class IpDetails {
+    [Nullable[int]]$asNumber
+    [string]$asOrg
+    [string]$domain
+    [string]$isp
+    [IpServiceCategory[]]$ipServiceCategories
+
+    IpDetails([object]$hashtable) {
+        $this.asNumber = $hashtable.asNumber
+        $this.asOrg = $hashtable.asOrg
+        $this.domain = $hashtable.domain
+        $this.isp = $hashtable.isp
+        $this.ipServiceCategories = $hashtable.ipServiceCategories
+    }
+}
+
+class Risk {
+    [string]$detectionName
+    [string]$issuer
+    [string]$level
+    [string]$previousLevel
+    [string[]]$reasons
+
+    Risk([object]$hashtable) {
+        $this.detectionName = $hashtable.detectionName
+        $this.issuer = $hashtable.issuer
+        $this.level = $hashtable.level
+        $this.previousLevel = $hashtable.previousLevel
+        $this.reasons = $hashtable.reasons
+    }
+}
+
+class UserBehavior {
+    [string]$id
+    [string]$name
+    [string]$result
+
+    UserBehavior([object]$hashtable) {
+        $this.id = $hashtable.id
+        $this.name = $hashtable.name
+        $this.result = $hashtable.result
+    }
+}
+
 class SecurityContext {
-    [int]$asNumber
+    [Nullable[int]]$asNumber
     [string]$asOrg
     [string]$isp
     [string]$domain
-    [bool]$isProxy
+    [Nullable[bool]]$isProxy
+    [BotProtection]$botProtection
+    [IpDetails]$ipDetails
+    [Risk]$risk
+    [UserBehavior[]]$userBehaviors
 
     SecurityContext([object]$hashtable) {
         $this.asNumber = $hashtable.asNumber
@@ -211,6 +291,10 @@ class SecurityContext {
         $this.isp = $hashtable.isp
         $this.domain = $hashtable.domain
         $this.isProxy = $hashtable.isProxy
+        $this.botProtection = $hashtable.botProtection
+        $this.ipDetails = $hashtable.ipDetails
+        $this.risk = $hashtable.risk
+        $this.userBehaviors = $hashtable.userBehaviors
     }
 }
 
@@ -219,12 +303,14 @@ class IpAddress {
     [GeographicalContext]$geographicalContext
     [string]$version
     [string]$source
+    [IpDetails]$ipDetails
 
     IpAddress([object]$hashtable) {
         $this.ip = $hashtable.ip
         $this.geographicalContext = $hashtable.geographicalContext
         $this.version = $hashtable.version
         $this.source = $hashtable.source
+        $this.ipDetails = $hashtable.ipDetails
     }
 }
 
