@@ -93,13 +93,40 @@ Function Invoke-OktaRequest {
     if ($PSCmdlet.ShouldProcess($request_uri)) {
         # supports pagination
         $next = $True
+        $stepUpAttempted = $false
         $return = while($next) {
             $Script:OktaAuth.DebugLastRequestUri = $webrequest_parameters['Uri']
             try {
                 Write-Debug ($webrequest_parameters | ConvertTo-Json -Depth 10)
                 $response = Invoke-WebRequest @webrequest_parameters
             } catch [Microsoft.PowerShell.Commands.HttpResponseException] {
-                Write-Error "Status code: $($_.Exception.Response.StatusCode.value__)"
+                $statusCode = $_.Exception.Response.StatusCode.value__
+
+                # Step-up authentication challenge: Okta returns 401 with
+                # WWW-Authenticate: error="insufficient_user_authentication" when
+                # an action requires recent MFA. Elevate the existing session
+                # via OIDC step-up entry, then retry the original request.
+                $wwwAuth = ''
+                try { $wwwAuth = ($_.Exception.Response.Headers.GetValues('WWW-Authenticate')) -join ' ' } catch {}
+                If($statusCode -eq 401 -and $wwwAuth -match 'insufficient_user_authentication' -and -not $stepUpAttempted) {
+                    $stepUpAttempted = $true
+
+                    Write-Host "Okta requires step-up authentication for this action."
+
+                    $stepUpParams = @{}
+                    If($wwwAuth -match 'max_age="?(\d+)"?') {
+                        $stepUpParams['MaxAge'] = [int]$Matches[1]
+                    }
+                    If($wwwAuth -match 'acr_values="([^"]+)"') {
+                        $stepUpParams['AcrValues'] = $Matches[1]
+                    }
+
+                    Invoke-OktaStepUp @stepUpParams -ErrorAction Stop
+
+                    Continue
+                }
+
+                Write-Error "Status code: $statusCode"
                 If($_.Exception.Response.StatusCode -eq 429) {
                     Write-Debug "X-Rate-Limit-Limit: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Limit'))"
                     Write-Debug "X-Rate-Limit-Remaining: $($_.Exception.Response.Headers.GetValues('X-Rate-Limit-Remaining'))"
